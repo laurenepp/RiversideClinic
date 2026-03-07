@@ -1,0 +1,26 @@
+Inside create:
+
+api
+assets
+js
+
+riverside-clinic/
+│
+├── index.html
+│
+├── assets/
+│   └── css/
+│       └── styles.css
+│
+├── js/
+│   ├── app.js
+│   ├── auth.js
+│   ├── api.js
+│   └── router.js
+│
+└── api/
+    ├── config.php
+    └── auth/
+        ├── login.php
+        ├── logout.php
+        └── me.php
