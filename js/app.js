@@ -60,11 +60,8 @@ async function start() {
       welcome.innerText = `${user.name} (${user.role})`;
     }
 
-    // Normalize role
+    // Normalize DB role value
     const role = normalizeRole(user.role);
-
-    // Build sidenav buttons
-    buildMenu(role);
 
     // Load the correct dashboard for the role
     renderDashboardShell(role);
@@ -74,16 +71,49 @@ async function start() {
   }
 }
 
+
 // -----------------------------
 // Login UI
 // -----------------------------
 function showLogin() {
+  document.querySelector(".app")?.classList.add("logged-out");
+
   document.getElementById("content").innerHTML = `
-    <div class="card">
-      <h2>Login</h2>
-      <input id="u" placeholder="Username"><br><br>
-      <input id="p" type="password" placeholder="Password"><br><br>
-      <button onclick="doLogin()">Login</button>
+    <div class="login-screen">
+      <div class="login-left">
+        <div class="login-logo-wrap">
+          <img
+            src="assets/images/Desert 1 Circle.png"
+            alt="Riverside Clinic Logo"
+            class="login-logo"
+          >
+          <img
+            src="assets/images/Desert Riverside Text.png"
+            alt="Riverside Clinic"
+            class="login-logo-text"
+          >
+        </div>
+      </div>
+
+      <div class="login-right">
+        <div class="login-card">
+          <div class="login-card-inner">
+            <p class="login-eyebrow">Riverside Family Clinic</p>
+            <h1>Welcome Back</h1>
+            <p class="login-subtext">Sign in to access the clinic portal.</p>
+
+            <div class="login-form">
+              <label for="u">Username</label>
+              <input id="u" placeholder="Enter username">
+
+              <label for="p">Password</label>
+              <input id="p" type="password" placeholder="Enter password">
+
+              <button class="login-btn" onclick="doLogin()">Login</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
