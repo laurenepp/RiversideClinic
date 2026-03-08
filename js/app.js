@@ -23,8 +23,9 @@ async function api(url, method = "GET", body = null) {
   }
 
   if (!res.ok) {
-    // throw best available error message
-    throw (data && data.error) ? data.error : (data && data.raw ? data.raw : "Request failed");
+    throw (data && data.error)
+      ? data.error
+      : (data && data.raw ? data.raw : "Request failed");
   }
 
   return data;
@@ -32,7 +33,6 @@ async function api(url, method = "GET", body = null) {
 
 // -----------------------------
 // Role normalization
-// (DB returns: Admin/Doctor/Nurse/Receptionist)
 // -----------------------------
 function normalizeRole(role) {
   role = (role || "").trim().toLowerCase();
@@ -95,7 +95,11 @@ function showLogin() {
       <div class="login-right">
         <div class="login-card">
           <div class="login-card-inner">
+<<<<<<< Updated upstream
             <p class="login-eyebrow">Riverside Family Clinic</p>
+=======
+            <p class="login-eyebrow">Riverside Clinic</p>
+>>>>>>> Stashed changes
             <h1>Welcome Back</h1>
             <p class="login-subtext">Sign in to access the clinic portal.</p>
 
@@ -135,8 +139,6 @@ async function doLogin() {
 // Dashboard Shell + Menu Routing
 // -----------------------------
 function renderDashboardShell(role) {
-  // Basic shell: nav + main view
-  // (We will later swap this markup to match your mockups exactly.)
   document.getElementById("content").innerHTML = `
     <div class="dashboard">
       <div class="dash-nav" id="dash_nav"></div>
@@ -148,7 +150,7 @@ function renderDashboardShell(role) {
 
   const nav = document.getElementById("dash_nav");
 
-    if (role === "admin") {
+  if (role === "admin") {
     nav.innerHTML = `
       <div class="admin-side-nav-group">
         <button class="navbtn" onclick="admin_home()">Admin Home</button>
@@ -197,7 +199,6 @@ function renderDashboardShell(role) {
     return;
   }
 
-  // Unknown role fallback
   nav.innerHTML = `
     <div style="padding:10px;">
       <b>Unknown role:</b> ${role}<br><br>
@@ -213,10 +214,9 @@ function setView(html) {
 }
 
 // -----------------------------
-// Logout (optional endpoint)
+// Logout
 // -----------------------------
 async function doLogout() {
-  // If you don't have logout.php yet, it will still reload cleanly.
   try {
     await api("api/auth/logout.php", "POST", {});
   } catch (e) {
@@ -251,12 +251,14 @@ function doc_home() {
     <p>TODO: Today’s schedule + quick visit note entry.</p>
   `);
 }
+
 function doc_schedule() {
   setView(`
     <h2>My Schedule</h2>
     <p>TODO: Pull appointments for this provider.</p>
   `);
 }
+
 function doc_notes() {
   setView(`
     <h2>Visit Notes</h2>
@@ -273,12 +275,14 @@ function nurse_home() {
     <p>TODO: Patient queue + intake shortcuts.</p>
   `);
 }
+
 function nurse_schedule() {
   setView(`
     <h2>Schedules</h2>
     <p>TODO: Nurse schedule view.</p>
   `);
 }
+
 function nurse_intake() {
   setView(`
     <h2>Intake</h2>
@@ -295,12 +299,14 @@ function rx_home() {
     <p>TODO: Register patients + schedule appointments.</p>
   `);
 }
+
 function rx_registerPatient() {
   setView(`
     <h2>Register Patient</h2>
     <p>TODO: Patient registration form.</p>
   `);
 }
+
 function rx_appointments() {
   setView(`
     <h2>Appointments</h2>
