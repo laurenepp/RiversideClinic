@@ -1,5 +1,8 @@
 // js/roles/admin.js
 
+let adminEventLogs = [];
+let adminEventLogsInterval = null;
+
 function loadAdmin(){
   const content = document.getElementById("content");
 
@@ -23,8 +26,27 @@ function admin_loadTiles(){
   const wrap = document.getElementById("admin_tiles");
   if (!wrap) return;
 
-  // UI-only for now
-  wrap.innerHTML = "";
+  wrap.innerHTML = `
+    <div class="admin-top-tabs card">
+      <button
+        type="button"
+        id="adminTabUsers"
+        class="admin-top-tab active"
+        onclick="admin_showUsers()"
+      >
+        User Management
+      </button>
+
+      <button
+        type="button"
+        id="adminTabLogs"
+        class="admin-top-tab"
+        onclick="admin_showEventLogs()"
+      >
+        Event Logs
+      </button>
+    </div>
+  `;
 }
 
 function admin_tile(label, value, sub, iconText, tone){
@@ -41,7 +63,26 @@ function admin_tile(label, value, sub, iconText, tone){
 }
 
 function admin_panel(html){
-  document.getElementById("admin_panel").innerHTML = html;
+  const panel = document.getElementById("admin_panel");
+  if (panel) panel.innerHTML = html;
+}
+
+function admin_setActiveTab(tabName){
+  const usersTab = document.getElementById("adminTabUsers");
+  const logsTab = document.getElementById("adminTabLogs");
+
+  if (usersTab) usersTab.classList.remove("active");
+  if (logsTab) logsTab.classList.remove("active");
+
+  if (tabName === "users" && usersTab) usersTab.classList.add("active");
+  if (tabName === "logs" && logsTab) logsTab.classList.add("active");
+}
+
+function admin_clearEventLogsInterval(){
+  if (adminEventLogsInterval) {
+    clearInterval(adminEventLogsInterval);
+    adminEventLogsInterval = null;
+  }
 }
 
 /* -------------------------
@@ -49,6 +90,9 @@ function admin_panel(html){
 ------------------------- */
 
 function admin_showUsers(){
+  admin_clearEventLogsInterval();
+  admin_setActiveTab("users");
+
   admin_panel(`
     <div class="admin-users-shell">
       <div class="admin-users-toolbar card">
@@ -311,6 +355,9 @@ async function admin_createUser(){
 }
 
 function admin_editUser(u){
+  admin_clearEventLogsInterval();
+  admin_setActiveTab("users");
+
   admin_panel(`
     <div class="section-title">
       <h3>Edit User #${u.User_ID}</h3>
@@ -372,10 +419,339 @@ function admin_toggleDisable(userId, isDisabled){
 }
 
 /* -------------------------
+   EVENT LOGS
+------------------------- */
+
+function admin_showEventLogs(){
+  admin_setActiveTab("logs");
+
+  admin_panel(`
+    <div class="admin-event-shell">
+      <div class="card admin-event-filter-card">
+        <div class="admin-event-toolbar">
+          <div>
+            <h3 class="admin-event-title">Filter Event Logs</h3>
+          </div>
+
+          <button type="button" id="adminExportCsvBtn" class="admin-export-csv-btn">
+            Export CSV
+          </button>
+        </div>
+
+        <div class="admin-event-filters-grid">
+          <div class="field">
+            <label>Action Type</label>
+            <select id="adminLogActionType">
+              <option value="">All Actions</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>User</label>
+            <input id="adminLogUser" type="text" placeholder="Filter by user">
+          </div>
+
+          <div class="field">
+            <label>Severity</label>
+            <select id="adminLogSeverity">
+              <option value="">All Levels</option>
+              <option value="Critical">Critical</option>
+              <option value="Warning">Warning</option>
+              <option value="Info">Info</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Date From</label>
+            <input id="adminLogDateFrom" type="date">
+          </div>
+
+          <div class="field">
+            <label>Date To</label>
+            <input id="adminLogDateTo" type="date">
+          </div>
+        </div>
+
+        <div class="admin-event-count" id="adminEventCountText">
+          Loading event logs...
+        </div>
+      </div>
+
+      <div class="admin-event-summary-grid" id="adminEventSummaryGrid"></div>
+
+      <div class="card admin-event-history-card">
+        <div class="section-title" style="margin-bottom:12px;">
+          <h3>Event Log History</h3>
+        </div>
+
+        <div id="admin_event_logs_table"></div>
+      </div>
+    </div>
+  `);
+
+  const ids = [
+    "adminLogActionType",
+    "adminLogUser",
+    "adminLogSeverity",
+    "adminLogDateFrom",
+    "adminLogDateTo"
+  ];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("input", admin_renderFilteredEventLogs);
+    el.addEventListener("change", admin_renderFilteredEventLogs);
+  });
+
+  const exportBtn = document.getElementById("adminExportCsvBtn");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", admin_exportEventLogsCSV);
+  }
+
+  admin_fetchEventLogs();
+
+  admin_clearEventLogsInterval();
+  adminEventLogsInterval = setInterval(() => {
+    if (document.getElementById("adminLogActionType")) {
+      admin_fetchEventLogs();
+    }
+  }, 10000);
+}
+
+async function admin_fetchEventLogs(){
+  try {
+    const res = await fetch("api/admin/event_logs.php", {
+      method: "GET",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch event logs");
+    }
+
+    const data = await res.json();
+
+    adminEventLogs = Array.isArray(data) ? data : [];
+    admin_populateEventActionOptions(adminEventLogs);
+    admin_renderFilteredEventLogs();
+  } catch (err) {
+    console.error(err);
+
+    const count = document.getElementById("adminEventCountText");
+    if (count) {
+      count.textContent = "Unable to load event logs.";
+    }
+
+    const summary = document.getElementById("adminEventSummaryGrid");
+    if (summary) {
+      summary.innerHTML = "";
+    }
+
+    const tableWrap = document.getElementById("admin_event_logs_table");
+    if (tableWrap) {
+      tableWrap.innerHTML = `
+        <div class="card">
+          <p style="margin:0;">Unable to load event logs from the database.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+function admin_populateEventActionOptions(logs){
+  const select = document.getElementById("adminLogActionType");
+  if (!select) return;
+
+  const selected = select.value || "";
+  const uniqueActions = [...new Set(logs.map(log => log.actionType).filter(Boolean))].sort();
+
+  select.innerHTML = `
+    <option value="">All Actions</option>
+    ${uniqueActions.map(action => `<option value="${admin_escapeHtml(action)}">${admin_escapeHtml(action)}</option>`).join("")}
+  `;
+
+  select.value = uniqueActions.includes(selected) ? selected : "";
+}
+
+function admin_getFilteredEventLogs(){
+  const actionType = (document.getElementById("adminLogActionType")?.value || "").trim();
+  const user = (document.getElementById("adminLogUser")?.value || "").trim().toLowerCase();
+  const severity = (document.getElementById("adminLogSeverity")?.value || "").trim();
+  const dateFrom = document.getElementById("adminLogDateFrom")?.value || "";
+  const dateTo = document.getElementById("adminLogDateTo")?.value || "";
+
+  return adminEventLogs.filter(log => {
+    const logUser = (log.user || "").toLowerCase();
+    const logAction = log.actionType || "";
+    const logSeverity = log.severity || "";
+    const logDate = (log.date || "").slice(0, 10);
+
+    const matchesAction = !actionType || logAction === actionType;
+    const matchesUser = !user || logUser.includes(user);
+    const matchesSeverity = !severity || logSeverity === severity;
+    const matchesDateFrom = !dateFrom || logDate >= dateFrom;
+    const matchesDateTo = !dateTo || logDate <= dateTo;
+
+    return matchesAction && matchesUser && matchesSeverity && matchesDateFrom && matchesDateTo;
+  });
+}
+
+function admin_renderFilteredEventLogs(){
+  const logs = admin_getFilteredEventLogs();
+
+  const countText = document.getElementById("adminEventCountText");
+  if (countText) {
+    countText.textContent = `Showing ${logs.length} of ${adminEventLogs.length} events`;
+  }
+
+  admin_renderEventSummary(logs);
+  admin_renderEventLogsTable(logs);
+}
+
+function admin_renderEventSummary(logs){
+  const wrap = document.getElementById("adminEventSummaryGrid");
+  if (!wrap) return;
+
+  const total = logs.length;
+  const critical = logs.filter(log => (log.severity || "") === "Critical").length;
+  const warning = logs.filter(log => (log.severity || "") === "Warning").length;
+  const info = logs.filter(log => (log.severity || "") === "Info").length;
+
+  wrap.innerHTML = `
+    <div class="admin-event-summary-card">
+      <div class="admin-event-summary-label">Total Events</div>
+      <div class="admin-event-summary-value">${total}</div>
+    </div>
+
+    <div class="admin-event-summary-card">
+      <div class="admin-event-summary-label">Critical</div>
+      <div class="admin-event-summary-value critical">${critical}</div>
+    </div>
+
+    <div class="admin-event-summary-card">
+      <div class="admin-event-summary-label">Warnings</div>
+      <div class="admin-event-summary-value warning">${warning}</div>
+    </div>
+
+    <div class="admin-event-summary-card">
+      <div class="admin-event-summary-label">Info</div>
+      <div class="admin-event-summary-value info">${info}</div>
+    </div>
+  `;
+}
+
+function admin_renderEventLogsTable(logs){
+  const wrap = document.getElementById("admin_event_logs_table");
+  if (!wrap) return;
+
+  if (!logs.length) {
+    wrap.innerHTML = `
+      <table class="admin-users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>DATE</th>
+            <th>USER</th>
+            <th>ACTION</th>
+            <th>SEVERITY</th>
+            <th>DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="6">No event logs found.</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    return;
+  }
+
+  const rows = logs.map(log => `
+    <tr>
+      <td>${admin_escapeHtml(String(log.id ?? ""))}</td>
+      <td>${admin_escapeHtml(admin_formatEventDate(log.date))}</td>
+      <td>${admin_escapeHtml(log.user || "-")}</td>
+      <td>${admin_escapeHtml(log.actionType || "-")}</td>
+      <td>
+        <span class="admin-severity-pill ${(log.severity || "").toLowerCase()}">
+          ${admin_escapeHtml((log.severity || "Info").toLowerCase())}
+        </span>
+      </td>
+      <td>${admin_escapeHtml(log.details || "-")}</td>
+    </tr>
+  `).join("");
+
+  wrap.innerHTML = `
+    <table class="admin-users-table admin-event-log-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>DATE</th>
+          <th>USER</th>
+          <th>ACTION</th>
+          <th>SEVERITY</th>
+          <th>DETAILS</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
+}
+
+function admin_exportEventLogsCSV(){
+  const logs = admin_getFilteredEventLogs();
+
+  if (!logs.length) {
+    toast("Export CSV", "There are no event logs to export.", "warn");
+    return;
+  }
+
+  const headers = ["ID", "Date", "User", "Action Type", "Severity", "Details"];
+
+  const rows = logs.map(log => [
+    String(log.id ?? ""),
+    String(log.date ?? ""),
+    String(log.user ?? ""),
+    String(log.actionType ?? ""),
+    String(log.severity ?? ""),
+    String(log.details ?? "")
+  ]);
+
+  const csv = [
+    headers.join(","),
+    ...rows.map(row =>
+      row.map(value => `"${value.replace(/"/g, '""')}"`).join(",")
+    )
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `event_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  window.URL.revokeObjectURL(url);
+}
+
+/* -------------------------
    REPORTS
 ------------------------- */
 
 function admin_showReports(){
+  admin_clearEventLogsInterval();
+  admin_setActiveTab("users");
+
   admin_panel(`
     <div class="section-title">
       <h3>Reporting - Appointments</h3>
@@ -392,4 +768,26 @@ function admin_showReports(){
 
 async function admin_loadReport(){
   // intentionally disabled for now
+}
+
+/* -------------------------
+   HELPERS
+------------------------- */
+
+function admin_formatEventDate(dateValue){
+  if (!dateValue) return "-";
+
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) return String(dateValue);
+
+  return d.toLocaleString();
+}
+
+function admin_escapeHtml(value){
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

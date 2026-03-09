@@ -980,3 +980,168 @@ button.block{ width:100%; }
     width:min(300px, 78%);
   }
 }
+
+/* ===== Admin top tabs ===== */
+
+.admin-top-tabs {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.admin-top-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #4f6475;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 10px 6px;
+  cursor: pointer;
+}
+
+.admin-top-tab.active {
+  color: #d62828;
+  border-bottom-color: #d62828;
+}
+
+/* ===== Event logs ===== */
+
+.admin-event-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-event-filter-card {
+  padding: 22px 24px;
+}
+
+.admin-event-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-event-title {
+  margin: 0;
+}
+
+.admin-export-csv-btn {
+  background: #5b8f93;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-export-csv-btn:hover {
+  background: #4f7f82;
+}
+
+.admin-event-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+.admin-event-count {
+  margin-top: 16px;
+  color: #516677;
+  font-size: 14px;
+}
+
+.admin-event-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.admin-event-summary-card {
+  background: #fff;
+  border: 1px solid #e2e8ef;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(15, 34, 51, 0.05);
+}
+
+.admin-event-summary-label {
+  color: #5b6f80;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.admin-event-summary-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #172b3a;
+}
+
+.admin-event-summary-value.critical {
+  color: #dc2626;
+}
+
+.admin-event-summary-value.warning {
+  color: #d97706;
+}
+
+.admin-event-summary-value.info {
+  color: #2563eb;
+}
+
+.admin-severity-pill {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.admin-severity-pill.critical {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.admin-severity-pill.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.admin-severity-pill.info {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.admin-event-log-table th,
+.admin-event-log-table td {
+  vertical-align: middle;
+}
+
+@media (max-width: 1100px) {
+  .admin-event-filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-event-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-event-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-event-filters-grid,
+  .admin-event-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
