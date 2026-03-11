@@ -44,7 +44,7 @@ body{
 /* Sidebar */
 .sidebar{
   width: 250px;
-  background: var(--teal);
+  background: #3b4657;
   color:#fff;
   padding: 22px 18px;
   position: fixed;
