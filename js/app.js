@@ -186,17 +186,11 @@ function renderDashboardShell(role) {
     nurse_home();
     return;
   }
-
-  if (role === "receptionist") {
-    nav.innerHTML = `
-      <button class="navbtn" onclick="rx_home()">Reception Home</button>
-      <button class="navbtn" onclick="rx_registerPatient()">Register Patient</button>
-      <button class="navbtn" onclick="rx_appointments()">Appointments</button>
-      <button class="navbtn" onclick="doLogout()">Logout</button>
-    `;
-    rx_home();
-    return;
-  }
+if (role === "receptionist") {
+  rx_home();
+  return;
+}
+  
 
   nav.innerHTML = `
     <div style="padding:10px;">
