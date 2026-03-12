@@ -161,6 +161,7 @@ function renderDashboardShell(role) {
         <button class="navbtn" id="logoutBtn">Logout</button>
       </div>
     `;
+    document.getElementById("logoutBtn")?.addEventListener("click", window.doLogout);
     admin_users();
     return;
   }
@@ -172,6 +173,7 @@ function renderDashboardShell(role) {
       <button class="navbtn" onclick="doc_notes()">Visit Notes</button>
       <button class="navbtn" id="logoutBtn">Logout</button>
     `;
+    document.getElementById("logoutBtn")?.addEventListener("click", window.doLogout);
     doc_home();
     return;
   }
@@ -183,6 +185,7 @@ function renderDashboardShell(role) {
       <button class="navbtn" onclick="nurse_intake()">Intake</button>
       <button class="navbtn" id="logoutBtn">Logout</button>
     `;
+    document.getElementById("logoutBtn")?.addEventListener("click", window.doLogout);
     nurse_home();
     return;
   }
@@ -194,6 +197,7 @@ function renderDashboardShell(role) {
       <button class="navbtn" onclick="rx_appointments()">Appointments</button>
       <button class="navbtn" id="logoutBtn">Logout</button>
     `;
+    document.getElementById("logoutBtn")?.addEventListener("click", window.doLogout);
     rx_home();
     return;
   }
