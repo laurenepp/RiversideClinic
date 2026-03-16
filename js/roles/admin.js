@@ -151,11 +151,14 @@ function admin_showUsers() {
         <button id="adminAddUserBtn" class="admin-action-btn">+ Add User</button>
       </div>
 
-      <div id="adminUsersStats" class="admin-users-stats">Total Users: 0 | Active: 0 | Locked: 0</div>
+      <div id="adminUsersStats" class="admin-users-stats">
+        Total Users: 0 | Active: 0 | Locked: 0
+      </div>
+
       <div id="admin_users"></div>
     </div>
 
-    <div id="admin_create_wrap" style="display:none;"></div>
+    <div id="admin_panel" class="admin-panel-box" style="display:none;"></div>
     <div id="admin_msg"></div>
   `);
 
@@ -168,56 +171,71 @@ function admin_showUsers() {
 
   admin_loadUsers();
 }
-function admin_loadUsers(){
-  // UI-only mock data for now
-  window.adminUsersData = [
-    {
-      User_ID: 1,
-      First_Name: "Reyna",
-      Last_Name: "Administrator",
-      Email: "reyna@clinic.com",
-      Role_Name: "Administrator",
-      Is_Disabled: 0,
-      Last_Login_At: "-"
-    },
-    {
-      User_ID: 2,
-      First_Name: "Fernando",
-      Last_Name: "Doctor",
-      Email: "fernando@clinic.com",
-      Role_Name: "Doctor",
-      Is_Disabled: 0,
-      Last_Login_At: "-"
-    },
-    {
-      User_ID: 3,
-      First_Name: "Logan",
-      Last_Name: "Nurse",
-      Email: "logan@clinic.com",
-      Role_Name: "Nurse",
-      Is_Disabled: 0,
-      Last_Login_At: "-"
-    },
-    {
-      User_ID: 4,
-      First_Name: "Michael",
-      Last_Name: "Phillips",
-      Email: "michael@clinic.com",
-      Role_Name: "Administrator",
-      Is_Disabled: 0,
-      Last_Login_At: "-"
-    },
-    {
-      User_ID: 5,
-      First_Name: "Andrea",
-      Last_Name: "Receptionist",
-      Email: "andrea@clinic.com",
-      Role_Name: "Receptionist",
-      Is_Disabled: 0,
-      Last_Login_At: "-"
-    }
-  ];
 
+  const addBtn = document.getElementById("adminAddUserBtn");
+  if (addBtn) {
+    addBtn.addEventListener("click", function () {
+      admin_showCreateUser();
+    });
+  }
+
+  admin_loadUsers();
+
+function admin_loadUsers() {
+  // Only create mock data once
+  if (!window.adminUsersData || !Array.isArray(window.adminUsersData) || !window.adminUsersData.length) {
+    window.adminUsersData = [
+      {
+        User_ID: 1,
+        First_Name: "Reyna",
+        Last_Name: "Administrator",
+        Email: "reyna@clinic.com",
+        Role_Name: "Administrator",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 2,
+        First_Name: "Fernando",
+        Last_Name: "Doctor",
+        Email: "fernando@clinic.com",
+        Role_Name: "Doctor",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 3,
+        First_Name: "Logan",
+        Last_Name: "Nurse",
+        Email: "logan@clinic.com",
+        Role_Name: "Nurse",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 4,
+        First_Name: "Michael",
+        Last_Name: "Phillips",
+        Email: "michael@clinic.com",
+        Role_Name: "Administrator",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 5,
+        First_Name: "Andrea",
+        Last_Name: "Receptionist",
+        Email: "andrea@clinic.com",
+        Role_Name: "Receptionist",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      }
+    ];
+  }
+
+  admin_refreshUsersUI();
+}
+function admin_refreshUsersUI() {
   const totalUsers = window.adminUsersData.length;
   const activeUsers = window.adminUsersData.filter(u => !Number(u.Is_Disabled)).length;
   const lockedUsers = window.adminUsersData.filter(u => Number(u.Is_Disabled)).length;
@@ -229,7 +247,6 @@ function admin_loadUsers(){
 
   admin_renderUsersTable(window.adminUsersData);
 }
-
 function admin_filterUsers(){
   const searchEl = document.getElementById("adminUserSearch");
   const term = (searchEl?.value || "").trim().toLowerCase();
@@ -260,7 +277,7 @@ function admin_filterUsers(){
   admin_renderUsersTable(filtered);
 }
 
-function admin_renderUsersTable(users){
+function admin_renderUsersTable(users) {
   const rows = users.map(u => `
     <tr>
       <td>
@@ -288,7 +305,7 @@ function admin_renderUsersTable(users){
       </td>
       <td>${u.Last_Login_At || "-"}</td>
       <td class="admin-actions-cell">
-        <button class="small ghost" onclick='admin_editUser(${JSON.stringify(u)})'>Edit</button>
+        <button class="small ghost" onclick="admin_editUser(${u.User_ID})">Edit</button>
         <button
           class="small ${u.Is_Disabled ? "secondary" : "gold"}"
           onclick="admin_toggleDisable(${u.User_ID}, ${u.Is_Disabled ? 0 : 1})">
@@ -316,25 +333,30 @@ function admin_renderUsersTable(users){
   `;
 }
 
-function admin_showCreateUser(){
-  const wrap = document.getElementById("admin_create_wrap");
-  if (!wrap) return;
+function admin_showCreateUser() {
+  setView(`
+    <div class="page-header">
+      <h2>Add New User</h2>
+      <p>Create a new clinic user account.</p>
+    </div>
 
-  wrap.style.display = "block";
-  wrap.innerHTML = `
-    <div class="card admin-create-user-card">
-      <h3>Add New User</h3>
-      <p style="margin-top:8px;">Button click is working.</p>
+    <div class="admin-panel-box">
+      <div class="section-title">
+        <h3>New User Details</h3>
+        <div class="tools">
+          <button class="ghost" onclick="admin_showUsers()">Back to Users</button>
+        </div>
+      </div>
 
-      <div class="form-grid admin-create-grid">
+      <div class="form-grid">
         <div class="field">
-          <label>Full Name</label>
-          <input id="cu_fullname" placeholder="Enter full name">
+          <label>First Name</label>
+          <input id="cu_first" placeholder="Enter first name">
         </div>
 
         <div class="field">
-          <label>Username</label>
-          <input id="cu_username" placeholder="Enter username">
+          <label>Last Name</label>
+          <input id="cu_last" placeholder="Enter last name">
         </div>
 
         <div class="field">
@@ -351,23 +373,24 @@ function admin_showCreateUser(){
             <option>Receptionist</option>
           </select>
         </div>
-
-        <div class="field admin-create-span-2">
-          <label>Initial Password</label>
-          <input id="cu_password" type="password" placeholder="Enter initial password">
-        </div>
       </div>
 
       <div class="row" style="margin-top:16px;">
         <button class="admin-create-submit" type="button" onclick="admin_mockCreateUser()">Create User</button>
-        <button class="admin-create-cancel" type="button" onclick="admin_cancelCreateUser()">Cancel</button>
+        <button class="admin-create-cancel" type="button" onclick="admin_showUsers()">Cancel</button>
       </div>
 
       <div id="admin_msg" style="margin-top:10px;"></div>
     </div>
-  `;
+  `);
 }
+function admin_closePanel() {
+  const panel = document.getElementById("admin_panel");
+  if (!panel) return;
 
+  panel.style.display = "none";
+  panel.innerHTML = "";
+}
 function admin_cancelCreateUser(){
   const wrap = document.getElementById("admin_create_wrap");
   if (!wrap) return;
@@ -376,79 +399,126 @@ function admin_cancelCreateUser(){
   wrap.innerHTML = "";
 }
 
-function admin_mockCreateUser(){
-  const msg = document.getElementById("admin_msg");
-  if (!msg) return;
+function admin_mockCreateUser() {
+  const first = document.getElementById("cu_first")?.value.trim();
+  const last = document.getElementById("cu_last")?.value.trim();
+  const email = document.getElementById("cu_email")?.value.trim();
+  const role = document.getElementById("cu_role")?.value;
 
-  msg.innerHTML = `<span class="badge gold">Form is working. Database insert is disabled until schema fixes are complete.</span>`;
+  const msg = document.getElementById("admin_msg");
+
+  if (!first || !last || !email || !role) {
+    if (msg) {
+      msg.innerHTML = `<span class="badge gold">Please fill out all fields.</span>`;
+    }
+    return;
+  }
+
+  const nextId = Math.max(...window.adminUsersData.map(u => Number(u.User_ID)), 0) + 1;
+
+  window.adminUsersData.push({
+    User_ID: nextId,
+    First_Name: first,
+    Last_Name: last,
+    Email: email,
+    Role_Name: role,
+    Is_Disabled: 0,
+    Last_Login_At: "-"
+  });
+
+  admin_showUsers();
 }
 
 async function admin_createUser(){
   // intentionally disabled until backend/database is ready
 }
 
-function admin_editUser(u){
+function admin_editUser(userId) {
   admin_clearEventLogsInterval();
-  admin_setActiveTab("users");
 
-  admin_panel(`
-    <div class="section-title">
-      <h3>Edit User #${u.User_ID}</h3>
-      <div class="tools">
-        <button class="ghost" onclick="admin_showUsers()">Back</button>
-      </div>
+  const u = window.adminUsersData.find(user => Number(user.User_ID) === Number(userId));
+  if (!u) return;
+
+  setView(`
+    <div class="page-header">
+      <h2>Edit User</h2>
+      <p>Update user account details.</p>
     </div>
 
-    <div class="form-grid">
-      <div class="field">
-        <label>First Name</label>
-        <input id="eu_first" value="${u.First_Name || ""}">
+    <div class="admin-panel-box">
+      <div class="section-title">
+        <h3>Edit User #${u.User_ID}</h3>
+        <div class="tools">
+          <button class="ghost" onclick="admin_showUsers()">Back to Users</button>
+        </div>
       </div>
-      <div class="field">
-        <label>Last Name</label>
-        <input id="eu_last" value="${u.Last_Name || ""}">
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input id="eu_email" value="${u.Email || ""}">
-      </div>
-      <div class="field">
-        <label>Phone</label>
-        <input id="eu_phone" value="">
-      </div>
-      <div class="field">
-        <label>Role</label>
-        <select id="eu_role">
-          ${["Administrator","Doctor","Nurse","Receptionist"].map(r =>
-            `<option ${r === u.Role_Name ? "selected" : ""}>${r}</option>`
-          ).join("")}
-        </select>
-      </div>
-    </div>
 
-    <div class="row" style="margin-top:12px;">
-      <button class="primary" type="button" onclick="toast('Mock Save', 'Edit form is UI-only right now.', 'ok')">Save</button>
-      <button class="${u.Is_Disabled ? "secondary" : "gold"}" type="button"
-        onclick="admin_toggleDisable(${u.User_ID}, ${u.Is_Disabled ? 0 : 1})">
-        ${u.Is_Disabled ? "Enable" : "Disable"}
-      </button>
-    </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>First Name</label>
+          <input id="eu_first" value="${u.First_Name || ""}">
+        </div>
 
-    <div id="admin_msg" style="margin-top:10px;"></div>
+        <div class="field">
+          <label>Last Name</label>
+          <input id="eu_last" value="${u.Last_Name || ""}">
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input id="eu_email" value="${u.Email || ""}">
+        </div>
+
+        <div class="field">
+          <label>Role</label>
+          <select id="eu_role">
+            ${["Administrator","Doctor","Nurse","Receptionist"].map(r =>
+              `<option ${r === u.Role_Name ? "selected" : ""}>${r}</option>`
+            ).join("")}
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="primary" type="button" onclick="admin_mockUpdateUser(${u.User_ID})">Save</button>
+        <button class="${u.Is_Disabled ? "secondary" : "gold"}" type="button"
+          onclick="admin_toggleDisable(${u.User_ID}, ${u.Is_Disabled ? 0 : 1})">
+          ${u.Is_Disabled ? "Enable" : "Disable"}
+        </button>
+        <button class="ghost" type="button" onclick="admin_showUsers()">Cancel</button>
+      </div>
+
+      <div id="admin_msg" style="margin-top:10px;"></div>
+    </div>
   `);
 }
+function admin_mockUpdateUser(userId) {
+  const user = window.adminUsersData.find(u => Number(u.User_ID) === Number(userId));
+  if (!user) return;
 
+  user.First_Name = document.getElementById("eu_first")?.value.trim() || user.First_Name;
+  user.Last_Name = document.getElementById("eu_last")?.value.trim() || user.Last_Name;
+  user.Email = document.getElementById("eu_email")?.value.trim() || user.Email;
+  user.Role_Name = document.getElementById("eu_role")?.value || user.Role_Name;
+
+  admin_showUsers();
+}
 async function admin_updateUser(userId){
   // intentionally disabled for now
 }
 
-function admin_toggleDisable(userId, isDisabled){
+function admin_toggleDisable(userId, isDisabled) {
   const user = window.adminUsersData.find(u => Number(u.User_ID) === Number(userId));
   if (!user) return;
 
   user.Is_Disabled = isDisabled ? 1 : 0;
-  admin_loadUsers();
-  toast("Mock Update", isDisabled ? "User disabled (UI only)" : "User enabled (UI only)", "ok");
+  admin_refreshUsersUI();
+
+  toast(
+    "Mock Update",
+    isDisabled ? "User disabled (UI only)" : "User enabled (UI only)",
+    "ok"
+  );
 }
 
 /* -------------------------
