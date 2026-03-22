@@ -1233,3 +1233,152 @@ button.block{ width:100%; }
     transform: translateY(0) scale(1);
   }
 }
+/*Admin Dashboard Home Page*/
+.page-header h2 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  color: #1f3b57;
+}
+
+.page-header p {
+  margin: 0 0 20px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.admin-home-wrap {
+  padding: 10px 0;
+}
+
+.admin-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.admin-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #edf2f7;
+}
+
+.admin-card h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: #355070;
+}
+
+.admin-card p {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1d3557;
+}
+
+.admin-card span {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #7b8794;
+}
+
+.admin-home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.admin-panel-box {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #edf2f7;
+}
+
+.admin-panel-box h3 {
+  margin-top: 0;
+  color: #355070;
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-action-btn {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.admin-action-btn:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.admin-activity-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #4b5563;
+}
+
+.admin-activity-list li {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+  .admin-home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.admin-dashboard {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.admin-dashboard .dash-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+}
+
+.admin-dashboard .dash-main {
+  min-width: 0;
+}
+
+.admin-dashboard .dash-nav .nav-btn {
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .admin-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard .dash-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard .dash-nav .nav-btn {
+    width: auto;
+  }
+}

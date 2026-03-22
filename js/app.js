@@ -149,28 +149,24 @@ function renderDashboardShell(role) {
 
   const nav = document.getElementById("dash_nav");
 
-  if (role === "admin") {
-    nav.innerHTML = `
-      <div class="admin-side-nav-group">
-        <button class="navbtn" onclick="admin_home()">Admin Home</button>
-        <button class="navbtn" onclick="admin_users()">Manage Users</button>
-        <button class="navbtn" onclick="admin_reports()">Reporting</button>
-      </div>
-
-      <div class="admin-side-nav-footer">
-        <button class="navbtn" onclick="doLogout()">Logout</button>
-      </div>
-    `;
-    admin_users();
-    return;
-  }
+if (role === "admin") {
+  menu.innerHTML = `
+    <button class="nav-btn" onclick="admin_home()">Dashboard</button>
+    <button class="nav-btn" onclick="admin_users()">Manage Users</button>
+    <button class="nav-btn" onclick="admin_reports()">Reporting</button>
+    <button class="nav-btn" onclick="admin_settings()">Settings</button>
+    <button class="nav-btn logout" onclick="logout()">Logout</button>
+  `;
+  admin_home();
+  return;
+}
 
   if (role === "doctor") {
     nav.innerHTML = `
       <button class="navbtn" onclick="doc_home()">Doctor Home</button>
       <button class="navbtn" onclick="doc_schedule()">My Schedule</button>
       <button class="navbtn" onclick="doc_notes()">Visit Notes</button>
-      <button class="navbtn" onclick="doLogout()">Logout</button>
+      <button class="navbtn" onclick="logout()">Logout</button>
     `;
     doc_home();
     return;
@@ -181,7 +177,7 @@ function renderDashboardShell(role) {
       <button class="navbtn" onclick="nurse_home()">Nurse Home</button>
       <button class="navbtn" onclick="nurse_schedule()">Schedules</button>
       <button class="navbtn" onclick="nurse_intake()">Intake</button>
-      <button class="navbtn" onclick="doLogout()">Logout</button>
+      <button class="navbtn" onclick="logout()">Logout</button>
     `;
     nurse_home();
     return;
@@ -226,15 +222,71 @@ function admin_home() {
 }
 
 function admin_users() {
-  loadAdmin();
   admin_showUsers();
 }
 
 function admin_reports() {
-  loadAdmin();
   admin_showReports();
 }
 
+function admin_settings() {
+  setView(`
+    <div class="page-header">
+      <h2>Settings</h2>
+      <p>Manage clinic and administrator settings.</p>
+    </div>
+
+    <div class="admin-panel-box">
+      <p>Settings page coming soon.</p>
+    </div>
+  `);
+}
+function admin_appointments() {
+  setView(`
+    <div class="page-header">
+      <h2>Appointments</h2>
+      <p>View and manage clinic scheduling.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Appointments page coming soon.</p>
+    </div>
+  `);
+}
+
+function admin_staff() {
+  setView(`
+    <div class="page-header">
+      <h2>Staff</h2>
+      <p>Manage clinic staff and role assignments.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Staff management page coming soon.</p>
+    </div>
+  `);
+}
+
+function admin_reports() {
+  setView(`
+    <div class="page-header">
+      <h2>Reports</h2>
+      <p>Review clinic activity and reporting summaries.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Reports page coming soon.</p>
+    </div>
+  `);
+}
+function admin_settings() {
+  setView(`
+    <div class="page-header">
+      <h2>Settings</h2>
+      <p>Adjust clinic system preferences and admin settings.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Settings page coming soon.</p>
+    </div>
+  `);
+}
 // -----------------------------
 // Doctor Views (placeholders)
 // -----------------------------
