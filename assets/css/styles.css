@@ -1382,3 +1382,27 @@ button.block{ width:100%; }
     width: auto;
   }
 }
+/* ===== Collapsible Sections Styling ===== */
+
+details summary {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--teal-dark);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+details summary::before {
+  content: "+";
+  margin-right: 8px;
+  font-size: 14px;
+  font-weight: 900;
+  width: 16px;
+  text-align: center;
+}
+
+details[open] summary::before {
+  content: "-";
+}

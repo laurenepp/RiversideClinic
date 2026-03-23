@@ -158,7 +158,7 @@ async function rx_patientSearch(){
   `;
 }
 
-function rx_showPatientCreate(){
+function rx_showPatientCreate() {
   rx_panel(`
     <div class="section-title">
       <h3>Register Patient</h3>
@@ -167,16 +167,88 @@ function rx_showPatientCreate(){
       </div>
     </div>
 
-    <div class="form-grid">
-      <div class="field"><label>First Name</label><input id="p_first" placeholder="First Name"></div>
-      <div class="field"><label>Last Name</label><input id="p_last" placeholder="Last Name"></div>
-      <div class="field"><label>Phone</label><input id="p_phone" placeholder="Phone"></div>
-      <div class="field"><label>Email</label><input id="p_email" placeholder="Email (optional)"></div>
-      <div class="field">
-        <label>Date of Birth</label>
-        <input id="p_dob" type="date">
-        <div class="hint">Required</div>
+    <div class="section">
+      <h3>Patient Information</h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>First Name</label>
+          <input id="p_first" placeholder="First Name">
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input id="p_last" placeholder="Last Name">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input id="p_phone" placeholder="Phone">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input id="p_email" placeholder="Email (optional)">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input id="p_dob" type="date">
+          <div class="hint">Required</div>
+        </div>
       </div>
+    </div>
+
+    <div class="section" style="margin-top:18px;">
+      <details open>
+        <summary><strong>Emergency Contact</strong></summary>
+
+        <div class="form-grid" style="margin-top:10px;">
+          <div class="field">
+            <label>First Name</label>
+            <input id="ec_first" placeholder="Emergency Contact First Name">
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <input id="ec_last" placeholder="Emergency Contact Last Name">
+          </div>
+          <div class="field">
+            <label>Phone</label>
+            <input id="ec_phone" placeholder="Emergency Contact Phone">
+          </div>
+          <div class="field">
+            <label>Relationship</label>
+            <input id="ec_relationship" placeholder="Relationship to Patient">
+          </div>
+        </div>
+
+        <div class="hint">Recommended for intake.</div>
+      </details>
+    </div>
+
+    <div class="section" style="margin-top:18px;">
+      <details>
+        <summary><strong>Insurance Information</strong></summary>
+
+        <div class="form-grid" style="margin-top:10px;">
+          <div class="field">
+            <label>Insurance Provider</label>
+            <input id="ins_provider" placeholder="Insurance Provider">
+          </div>
+
+          <div class="field">
+            <label>Payment Status</label>
+            <select id="ins_status">
+              <option value="">Select status</option>
+              <option value="PENDING">PENDING</option>
+              <option value="PAID">PAID</option>
+              <option value="DENIED">DENIED</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Date Sent</label>
+            <input id="ins_date_sent" type="date">
+          </div>
+        </div>
+
+        <div class="hint">Optional for first version.</div>
+      </details>
     </div>
 
     <div class="row" style="margin-top:12px;">
@@ -186,7 +258,6 @@ function rx_showPatientCreate(){
     <div id="rx_msg" style="margin-top:10px;"></div>
   `);
 }
-
 async function rx_createPatient(){
   const firstName = document.getElementById("p_first").value.trim();
   const lastName  = document.getElementById("p_last").value.trim();
@@ -194,13 +265,38 @@ async function rx_createPatient(){
   const email     = document.getElementById("p_email").value.trim();
   const dob       = document.getElementById("p_dob").value;
 
-  const res = await api("api/receptionist/patients_create.php","POST",{firstName,lastName,phone,email,dob});
+  const emergencyFirstName = document.getElementById("ec_first").value.trim();
+  const emergencyLastName  = document.getElementById("ec_last").value.trim();
+  const emergencyPhone     = document.getElementById("ec_phone").value.trim();
+  const emergencyRelationship = document.getElementById("ec_relationship").value.trim();
+
+  const insuranceProvider = document.getElementById("ins_provider").value.trim();
+  const insuranceStatus   = document.getElementById("ins_status").value;
+  const insuranceDateSent = document.getElementById("ins_date_sent").value;
+
+  const res = await api("api/receptionist/patients_create.php", "POST", {
+    firstName,
+    lastName,
+    phone,
+    email,
+    dob,
+    emergencyFirstName,
+    emergencyLastName,
+    emergencyPhone,
+    emergencyRelationship,
+    insuranceProvider,
+    insuranceStatus,
+    insuranceDateSent
+  });
+
   toast("Patient created", `Patient ID ${res.patientId}`, "ok");
 
-  document.getElementById("rx_msg").innerHTML = `<span class="badge teal">Created Patient ID: ${res.patientId}</span>`;
+  document.getElementById("rx_msg").innerHTML = `
+    <span class="badge teal">Created Patient ID: ${res.patientId}</span>
+  `;
+
   await rx_loadTilesAndNext();
 }
-
 function rx_editPatient(p){
   rx_panel(`
     <div class="section-title">
