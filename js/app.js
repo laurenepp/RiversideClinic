@@ -47,7 +47,7 @@ function normalizeRole(role) {
 // -----------------------------
 // Boot: check session
 // -----------------------------
-async function start() {
+/*async function start() {
   try {
     const user = await api("api/auth/me.php");
 
@@ -65,6 +65,46 @@ async function start() {
 
     // Load the correct dashboard for the role
     renderDashboardShell(role);
+
+  } catch (err) {
+    showLogin();
+  }
+} */
+
+async function start() {
+  try {
+    const user = await api("api/auth/me.php");
+
+    document.querySelector(".app")?.classList.remove("logged-out");
+
+    const welcome = document.getElementById("welcome");
+    if (welcome) {
+      welcome.innerText = `${user.name} (${user.role})`;
+    }
+
+    const role = normalizeRole(user.role);
+
+    buildMenu(role);
+
+    if (role === "admin") {
+      admin_home();
+      return;
+    }
+
+    if (role === "doctor") {
+      loadDoctor();
+      return;
+    }
+
+    if (role === "nurse") {
+      nurse_home();
+      return;
+    }
+
+    if (role === "receptionist") {
+      rx_home();
+      return;
+    }
 
   } catch (err) {
     showLogin();
@@ -137,7 +177,7 @@ async function doLogin() {
 // -----------------------------
 // Dashboard Shell + Menu Routing
 // -----------------------------
-function renderDashboardShell(role) {
+/*function renderDashboardShell(role) {
   document.getElementById("content").innerHTML = `
     <div class="dashboard">
       <div class="dash-nav" id="dash_nav"></div>
@@ -210,7 +250,13 @@ function renderDashboardShell(role) {
 function setView(html) {
   const view = document.getElementById("dash_view");
   if (view) view.innerHTML = html;
+}*/
+
+function setView(html) {
+  const view = document.getElementById("content");
+  if (view) view.innerHTML = html;
 }
+
 
 // -----------------------------
 // Logout
@@ -244,7 +290,7 @@ function admin_reports() {
 // -----------------------------
 // Doctor Views (placeholders)
 // -----------------------------
-function doc_home() {
+/*function doc_home() {
   setView(`
     <h2>Doctor Dashboard</h2>
     <p>TODO: Today’s schedule + quick visit note entry.</p>
@@ -264,7 +310,237 @@ function doc_notes() {
     <p>TODO: Create/view visit notes.</p>
   `);
 }
+*/
 
+function doc_home() {
+  setView(`
+    <div class="card">
+      <h2>Doctor Dashboard</h2>
+      <p>Doctor home page placeholder.</p>
+    </div>
+  `);
+}
+
+function doc_schedule() {
+  setView(`
+    <div class="card">
+      <div class="section-title">
+        <h2>My Schedule</h2>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Patient</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>8:30 AM</td>
+            <td>Maria Lopez</td>
+            <td>Follow-up</td>
+            <td><span class="badge teal">Checked In</span></td>
+            <td><button class="small primary" onclick="doc_patients()">Open Chart</button></td>
+          </tr>
+          <tr>
+            <td>9:15 AM</td>
+            <td>James Carter</td>
+            <td>Blood Pressure Review</td>
+            <td><span class="badge">Scheduled</span></td>
+            <td><button class="small" onclick="doc_patients()">Open Chart</button></td>
+          </tr>
+          <tr>
+            <td>10:00 AM</td>
+            <td>Sophia Nguyen</td>
+            <td>Medication Check</td>
+            <td><span class="badge gold">Waiting</span></td>
+            <td><button class="small" onclick="doc_patients()">Open Chart</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `);
+}
+
+function doc_patients() {
+  setView(`
+    <div class="card">
+      <div class="section-title">
+        <h2>Patient Chart</h2>
+        <div class="tools">
+          <button class="ghost">Print Summary</button>
+          <button class="secondary">Send Prescription</button>
+          <button class="primary">Save Note</button>
+        </div>
+      </div>
+
+      <div class="row compact" style="margin-top:14px;">
+        <div class="field" style="flex:2;">
+          <label>Search Patient</label>
+          <input type="text" placeholder="Search by patient name or ID">
+        </div>
+        <div style="align-self:end;">
+          <button class="primary">Search</button>
+        </div>
+      </div>
+
+      <div class="tiles" style="margin-top:16px;">
+        <div class="tile teal">
+          <div class="content">
+            <div class="label">Last Visit</div>
+            <div class="value">03/20/2026</div>
+            <div class="sub">Routine follow-up</div>
+          </div>
+        </div>
+
+        <div class="tile gold">
+          <div class="content">
+            <div class="label">Blood Pressure</div>
+            <div class="value">128/82</div>
+            <div class="sub">Most recent reading</div>
+          </div>
+        </div>
+
+        <div class="tile sage">
+          <div class="content">
+            <div class="label">Allergies</div>
+            <div class="value">2</div>
+            <div class="sub">Penicillin, Latex</div>
+          </div>
+        </div>
+
+        <div class="tile dark">
+          <div class="content">
+            <div class="label">Active Meds</div>
+            <div class="value">4</div>
+            <div class="sub">Current medication list</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid" style="margin-top:18px;">
+        <div class="field">
+          <label>Patient Name</label>
+          <input value="Maria Lopez" disabled>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input value="08/14/1986" disabled>
+        </div>
+        <div class="field">
+          <label>Patient ID</label>
+          <input value="10245" disabled>
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input value="580-555-0134" disabled>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:18px;">
+        <div class="section-title">
+          <h3>Vitals</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Height</label>
+            <input value="5 ft 6 in" disabled>
+          </div>
+          <div class="field">
+            <label>Weight</label>
+            <input value="164 lb" disabled>
+          </div>
+          <div class="field">
+            <label>Temperature</label>
+            <input value="98.4 F" disabled>
+          </div>
+          <div class="field">
+            <label>Pulse</label>
+            <input value="76 bpm" disabled>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:18px;">
+        <div class="section-title">
+          <h3>Allergies</h3>
+        </div>
+        <div class="badge gold">Penicillin</div>
+        <div class="badge" style="margin-left:8px;">Latex</div>
+      </div>
+
+      <div class="section" style="margin-top:18px;">
+        <div class="section-title">
+          <h3>Current Medications</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Medication</th>
+              <th>Dosage</th>
+              <th>Frequency</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Lisinopril</td>
+              <td>10 mg</td>
+              <td>Once daily</td>
+            </tr>
+            <tr>
+              <td>Metformin</td>
+              <td>500 mg</td>
+              <td>Twice daily</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" style="margin-top:18px;">
+        <div class="section-title">
+          <h3>Assessment and Plan</h3>
+        </div>
+
+        <div class="field">
+          <label>Chief Complaint</label>
+          <input value="Follow-up for blood pressure and medication review">
+        </div>
+
+        <div class="field" style="margin-top:12px;">
+          <label>Assessment</label>
+          <textarea rows="4">Blood pressure improved since last visit. Patient tolerating medication well. No acute complaints today.</textarea>
+        </div>
+
+        <div class="field" style="margin-top:12px;">
+          <label>Plan</label>
+          <textarea rows="5">Continue current medication regimen. Encourage home blood pressure monitoring. Return in 3 months for follow-up.</textarea>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:18px;">
+        <div class="section-title">
+          <h3>Recent Visit Notes</h3>
+        </div>
+
+        <div style="border:1px solid var(--border); padding:12px; border-radius:14px; margin-top:10px;">
+          <div style="font-weight:800;">03/20/2026</div>
+          <div style="margin-top:6px;">Routine follow-up. Reviewed medications and blood pressure log. Patient stable.</div>
+        </div>
+
+        <div style="border:1px solid var(--border); padding:12px; border-radius:14px; margin-top:10px;">
+          <div style="font-weight:800;">12/18/2025</div>
+          <div style="margin-top:6px;">Initial hypertension management visit. Started lisinopril and ordered lab work.</div>
+        </div>
+      </div>
+    </div>
+  `);
+
+}
 // -----------------------------
 // Nurse Views (placeholders)
 // -----------------------------

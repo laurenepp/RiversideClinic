@@ -13,7 +13,7 @@ try {
     ]);
 } catch (PDOException $e) {
   http_response_code(500);
-  header("Content-Type: application/json");
+  header('Content-Type: application//json; charset=utf-8');
   echo json_encode([
     "error" => "DB Connection failed",
     "details" => $e->getMessage(),

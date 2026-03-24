@@ -30,14 +30,12 @@ function buildMenu(role) {
   // DOCTOR MENU
   // ===============================
   if (role === "doctor") {
-
     menu.innerHTML = `
-      <button class="nav-btn" onclick="doc_home()">Dashboard</button>
+      <button class="nav-btn" onclick="loadDoctor()">Dashboard</button>
       <button class="nav-btn" onclick="doc_schedule()">My Schedule</button>
       <button class="nav-btn" onclick="doc_patients()">Patients</button>
       <button class="nav-btn logout" onclick="doLogout()">Logout</button>
     `;
-
     return;
   }
 

@@ -12,8 +12,20 @@ function require_login() {
 }
 
 function require_role($roleName) {
-    $user = require_login();
+    /*$user = require_login();
     if (($user['role'] ?? '') !== $roleName) {
+        http_response_code(403);
+        echo json_encode(["error" => "Forbidden: role required: $roleName"]);
+        exit;
+    }
+    return $user;*/
+    
+    $user = require_login();
+
+    $userRole = strtolower(trim($user['role'] ?? ''));
+    $neededRole = strtolower(trim($roleName));
+
+    if ($userRole !== $neededRole) {
         http_response_code(403);
         echo json_encode(["error" => "Forbidden: role required: $roleName"]);
         exit;

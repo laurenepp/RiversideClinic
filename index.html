@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8"> <!-- adds extra language library to fix the punctuations -->
   <title>Riverside Clinic</title>
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
@@ -25,7 +26,8 @@
           <div class="user-dot"></div>
           <span id="welcome"></span>
         </div>
-        <button class="ghost" onclick="logout()">Logout</button>
+        <!--<button class="ghost" onclick="logout()">Logout</button>-->
+        <button class="ghost" onclick="doLogout()">Logout</button>
       </div>
 
       <div id="content"></div>
