@@ -1,5 +1,8 @@
+USE riversideclinicdb;
+
+
 INSERT INTO Roles (Role_ID, Role_Name) VALUES
-(1, 'Admin'),
+(1, 'Administrator'),
 (2, 'Doctor'),
 (3, 'Receptionist'),
 (4, 'Nurse');
@@ -10,7 +13,8 @@ INSERT INTO Users
 (1001, 'Fernando', 'Doctor', 2, '555-0001', 'fernando@clinic.com', 0),
 (1002, 'Andrea', 'Receptionist', 3, '555-0002', 'andrea@clinic.com', 0),
 (1003, 'Logan', 'Nurse', 4, '555-0003', 'logan@clinic.com', 0),
-(1004, 'Reyna', 'Administrator', 1, '555-0004', 'reyna@clinic.com', 0);
+(1004, 'Reyna', 'Administrator', 1, '555-0004', 'reyna@clinic.com', 0)
+(1005, 'Michael', 'Phillips', 1, '555-0005', 'michael@clinic.com', 0);
 
 
 INSERT INTO User_Login_Info (User_ID, Username, Password_Hash, Created_At) VALUES
@@ -18,3 +22,4 @@ INSERT INTO User_Login_Info (User_ID, Username, Password_Hash, Created_At) VALUE
 (1002, 'andrea', '$2y$10$.jyGfjaLWJAnGtWOU7uqjenWO3ly/535/2aGrymDlBgJoSDJEgxSW', NOW()),
 (1003, 'logan', '$2y$10$KDAfkIhvURQAZN6NgIkzoOJVwKKYWilTiZ5wHzyx9klk2kDLe2VoS', NOW()),
 (1004, 'reyna', '$2y$10$ZkxkygA2Vu5ZLAYpltSgFu0pWImICpoRBl0ml/LYPC59pwQAZ1t9W', NOW());
+(1005, 'michael', '$2y$10$6NdPKJvbtPHQphd28GYGzu85wmilKB1mQIcFYd0Qz64zJvp2/5Pua', NOW());
