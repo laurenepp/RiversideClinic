@@ -12,7 +12,7 @@ if ($appointmentId <= 0) {
 }
 
 // Simple check-in = set status to SCHEDULED -> (we'll use a status value "CHECKED_IN")
-$stmt = $pdo->prepare("UPDATE Appointments SET Status='CHECKED_IN' WHERE Appointment_ID=?");
+$stmt = $pdo->prepare("UPDATE Appointment SET Status='CHECKED_IN' WHERE Appointment_ID=?");
 $stmt->execute([$appointmentId]);
 
 echo json_encode(["success" => true]);

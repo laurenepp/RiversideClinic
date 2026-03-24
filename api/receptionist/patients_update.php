@@ -18,7 +18,7 @@ if ($patientId <= 0 || $first === "" || $last === "" || $phone === "" || $dob ==
 }
 
 $stmt = $pdo->prepare("
-  UPDATE Patients
+  UPDATE Patient
   SET First_Name=?, Last_Name=?, Phone_Number=?, Email=?, Date_Of_Birth=?
   WHERE Patient_ID=?
 ");

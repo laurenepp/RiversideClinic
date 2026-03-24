@@ -189,28 +189,24 @@ async function doLogin() {
 
   const nav = document.getElementById("dash_nav");
 
-  if (role === "admin") {
-    nav.innerHTML = `
-      <div class="admin-side-nav-group">
-        <button class="navbtn" onclick="admin_home()">Admin Home</button>
-        <button class="navbtn" onclick="admin_users()">Manage Users</button>
-        <button class="navbtn" onclick="admin_reports()">Reporting</button>
-      </div>
-
-      <div class="admin-side-nav-footer">
-        <button class="navbtn" onclick="doLogout()">Logout</button>
-      </div>
-    `;
-    admin_users();
-    return;
-  }
+if (role === "admin") {
+  menu.innerHTML = `
+    <button class="nav-btn" onclick="admin_home()">Dashboard</button>
+    <button class="nav-btn" onclick="admin_users()">Manage Users</button>
+    <button class="nav-btn" onclick="admin_reports()">Reporting</button>
+    <button class="nav-btn" onclick="admin_settings()">Settings</button>
+    <button class="nav-btn logout" onclick="logout()">Logout</button>
+  `;
+  admin_home();
+  return;
+}
 
   if (role === "doctor") {
     nav.innerHTML = `
       <button class="navbtn" onclick="doc_home()">Doctor Home</button>
       <button class="navbtn" onclick="doc_schedule()">My Schedule</button>
       <button class="navbtn" onclick="doc_notes()">Visit Notes</button>
-      <button class="navbtn" onclick="doLogout()">Logout</button>
+      <button class="navbtn" onclick="logout()">Logout</button>
     `;
     doc_home();
     return;
@@ -221,22 +217,16 @@ async function doLogin() {
       <button class="navbtn" onclick="nurse_home()">Nurse Home</button>
       <button class="navbtn" onclick="nurse_schedule()">Schedules</button>
       <button class="navbtn" onclick="nurse_intake()">Intake</button>
-      <button class="navbtn" onclick="doLogout()">Logout</button>
+      <button class="navbtn" onclick="logout()">Logout</button>
     `;
     nurse_home();
     return;
   }
-
-  if (role === "receptionist") {
-    nav.innerHTML = `
-      <button class="navbtn" onclick="rx_home()">Reception Home</button>
-      <button class="navbtn" onclick="rx_registerPatient()">Register Patient</button>
-      <button class="navbtn" onclick="rx_appointments()">Appointments</button>
-      <button class="navbtn" onclick="doLogout()">Logout</button>
-    `;
-    rx_home();
-    return;
-  }
+if (role === "receptionist") {
+  rx_home();
+  return;
+}
+  
 
   nav.innerHTML = `
     <div style="padding:10px;">
@@ -278,15 +268,71 @@ function admin_home() {
 }
 
 function admin_users() {
-  loadAdmin();
   admin_showUsers();
 }
 
 function admin_reports() {
-  loadAdmin();
   admin_showReports();
 }
 
+function admin_settings() {
+  setView(`
+    <div class="page-header">
+      <h2>Settings</h2>
+      <p>Manage clinic and administrator settings.</p>
+    </div>
+
+    <div class="admin-panel-box">
+      <p>Settings page coming soon.</p>
+    </div>
+  `);
+}
+function admin_appointments() {
+  setView(`
+    <div class="page-header">
+      <h2>Appointments</h2>
+      <p>View and manage clinic scheduling.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Appointments page coming soon.</p>
+    </div>
+  `);
+}
+
+function admin_staff() {
+  setView(`
+    <div class="page-header">
+      <h2>Staff</h2>
+      <p>Manage clinic staff and role assignments.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Staff management page coming soon.</p>
+    </div>
+  `);
+}
+
+function admin_reports() {
+  setView(`
+    <div class="page-header">
+      <h2>Reports</h2>
+      <p>Review clinic activity and reporting summaries.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Reports page coming soon.</p>
+    </div>
+  `);
+}
+function admin_settings() {
+  setView(`
+    <div class="page-header">
+      <h2>Settings</h2>
+      <p>Adjust clinic system preferences and admin settings.</p>
+    </div>
+    <div class="admin-panel-box">
+      <p>Settings page coming soon.</p>
+    </div>
+  `);
+}
 // -----------------------------
 // Doctor Views (placeholders)
 // -----------------------------
@@ -566,27 +612,34 @@ function nurse_intake() {
 }
 
 // -----------------------------
-// Receptionist Views (placeholders)
+// Nurse Views
 // -----------------------------
-function rx_home() {
-  setView(`
-    <h2>Reception Dashboard</h2>
-    <p>TODO: Register patients + schedule appointments.</p>
-  `);
+function nurse_home() {
+  loadNurse();
 }
 
+function nurse_schedule() {
+  loadNurse();
+}
+
+function nurse_intake() {
+  loadNurse();
+}
+
+// ----------------------------- 
+// Receptionist Views  
+// ----------------------------- 
+function rx_home() { 
+ buildMenu("receptionist"); 
+ loadReception(); 
+} 
 function rx_registerPatient() {
-  setView(`
-    <h2>Register Patient</h2>
-    <p>TODO: Patient registration form.</p>
-  `);
-}
-
+ loadReception();
+ rx_showPatientCreate(); 
+} 
 function rx_appointments() {
-  setView(`
-    <h2>Appointments</h2>
-    <p>TODO: Schedule/cancel/check-in appointments.</p>
-  `);
+ loadReception();
+ rx_showAppointmentBoard(); 
 }
 
 // Start the app

@@ -11,7 +11,7 @@ if ($appointmentId <= 0) {
     exit;
 }
 
-$stmt = $pdo->prepare("UPDATE Appointments SET Status='CANCELLED' WHERE Appointment_ID=?");
+$stmt = $pdo->prepare("UPDATE Appointment SET Status='CANCELLED' WHERE Appointment_ID=?");
 $stmt->execute([$appointmentId]);
 
 echo json_encode(["success" => true]);

@@ -19,7 +19,7 @@ $startDT = str_replace("T", " ", $startDT) . ":00";
 $endDT   = str_replace("T", " ", $endDT)   . ":00";
 
 $stmt = $pdo->prepare("
-  UPDATE Appointments
+  UPDATE Appointment
   SET Provider_User_ID=?, Scheduled_Start=?, Scheduled_End=?, Status='RESCHEDULED'
   WHERE Appointment_ID=?
 ");

@@ -26,8 +26,8 @@ $stmt = $pdo->prepare("
     u.User_ID AS Provider_ID,
     u.First_Name AS Provider_First,
     u.Last_Name  AS Provider_Last
-  FROM Appointments a
-  JOIN Patients p ON a.Patient_ID = p.Patient_ID
+  FROM Appointment a
+  JOIN Patient p ON a.Patient_Patient_ID = p.Patient_ID
   JOIN Users u ON a.Provider_User_ID = u.User_ID
   WHERE a.Scheduled_Start BETWEEN ? AND ?
   ORDER BY a.Scheduled_Start ASC

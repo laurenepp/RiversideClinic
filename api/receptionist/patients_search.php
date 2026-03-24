@@ -14,7 +14,7 @@ $like = "%" . $search . "%";
 
 $stmt = $pdo->prepare("
   SELECT Patient_ID, First_Name, Last_Name, Phone_Number, Email, Date_Of_Birth
-  FROM Patients
+  FROM Patient
   WHERE First_Name LIKE ? OR Last_Name LIKE ? OR Phone_Number LIKE ? OR Email LIKE ?
   ORDER BY Last_Name, First_Name
   LIMIT 50

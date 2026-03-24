@@ -8,17 +8,17 @@ $fromDT = $today . " 00:00:00";
 $toDT   = $today . " 23:59:59";
 
 // Total patients (overall)
-$totalPatients = (int)$pdo->query("SELECT COUNT(*) FROM Patients")->fetchColumn();
+$totalPatients = (int)$pdo->query("SELECT COUNT(*) FROM Patient")->fetchColumn();
 
 // Appointments today
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM Appointments WHERE Scheduled_Start BETWEEN ? AND ?");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM Appointment WHERE Scheduled_Start BETWEEN ? AND ?");
 $stmt->execute([$fromDT, $toDT]);
 $apptsToday = (int)$stmt->fetchColumn();
 
 function countStatus($pdo, $fromDT, $toDT, $status) {
   $stmt = $pdo->prepare("
     SELECT COUNT(*)
-    FROM Appointments
+    FROM Appointment
     WHERE Scheduled_Start BETWEEN ? AND ?
       AND Status = ?
   ");
@@ -45,8 +45,8 @@ $stmt = $pdo->prepare("
     p.Last_Name  AS Patient_Last,
     u.First_Name AS Provider_First,
     u.Last_Name  AS Provider_Last
-  FROM Appointments a
-  JOIN Patients p ON a.Patient_ID = p.Patient_ID
+  FROM Appointment a
+  JOIN Patient p ON a.Patient_Patient_ID = p.Patient_ID
   JOIN Users u ON a.Provider_User_ID = u.User_ID
   WHERE a.Scheduled_Start BETWEEN ? AND ?
     AND a.Scheduled_Start >= ?

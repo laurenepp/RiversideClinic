@@ -19,7 +19,7 @@ $startDT = str_replace("T", " ", $startDT) . ":00";
 $endDT   = str_replace("T", " ", $endDT)   . ":00";
 
 $stmt = $pdo->prepare("
-  INSERT INTO Appointments (Patient_ID, Provider_User_ID, Scheduled_Start, Scheduled_End, Status)
+  INSERT INTO Appointment (Patient_ID, Provider_User_ID, Scheduled_Start, Scheduled_End, Status)
   VALUES (?, ?, ?, ?, 'SCHEDULED')
 ");
 $stmt->execute([$patientId, $providerId, $startDT, $endDT]);
