@@ -14,9 +14,7 @@ function escapeHtml(text) {
 
 function loadDoctor() {
   /* CHANGE 2:
-     Fixed invalid log line.
-     OLD: CSSCounterStyleRule.log("doctor.js load");
-     NEW: console.log("doctor.js loaded");
+     Keep the main dashboard layout and tiles on the Doctor dashboard.
   */
   console.log("doctor.js loaded");
 
@@ -28,6 +26,9 @@ function loadDoctor() {
       <h2>Doctor - My Day</h2>
       <p>Schedule, checked-in queue, visit notes</p>
 
+      <!-- NOTE:
+           Main dashboard summary tiles load here.
+      -->
       <div id="doc_tiles"></div>
 
       <div class="row compact" style="margin-top:14px;">
@@ -41,8 +42,19 @@ function loadDoctor() {
         </div>
       </div>
 
+      <!-- NOTE:
+           Checked-in queue shows under the summary tiles.
+      -->
       <div id="doc_queue" style="margin-top:16px;"></div>
+
+      <!-- NOTE:
+           Schedule table loads here.
+      -->
       <div id="doc_list" style="margin-top:16px;"></div>
+
+      <!-- NOTE:
+           Appointment details / visit note workspace loads here.
+      -->
       <div id="doc_panel" style="margin-top:16px;"></div>
     </div>
   `;
@@ -51,6 +63,9 @@ function loadDoctor() {
 }
 
 async function doc_refreshDay() {
+  /* NOTE:
+     Refresh both the summary area and the schedule area together.
+  */
   await doc_loadTilesAndQueue();
   await doc_loadSchedule();
 }
@@ -59,48 +74,87 @@ async function doc_loadTilesAndQueue() {
   const tilesWrap = document.getElementById("doc_tiles");
   const queueWrap = document.getElementById("doc_queue");
 
-  tilesWrap.innerHTML = `<div style="margin-top:12px; color: var(--muted); font-weight:700;">Loading doctor dashboard. . .</div>`;
-  queueWrap.innerHTML = "";
-
-  const d = await apiSafe("api/doctor/dashboard_summary.php");
+  if (!tilesWrap) return;
+  if (queueWrap) queueWrap.innerHTML = "";
 
   tilesWrap.innerHTML = `
-    <div class="tiles">
-      ${doc_tile("Appointments Today", d.totalToday, `All statuses`, "C", "gold")}
-      ${doc_tile("Scheduled", d.scheduledToday, `Upcoming`, "S", "teal")}
-      ${doc_tile("Checked-In", d.checkedInToday, `Ready now`, "✓", "dark")}
-      ${doc_tile("Completed", d.completedToday, `Finished`, "✔", "teal")}
-      ${doc_tile("Cancelled", d.cancelledToday, `Cancelled`, "×", "gold")}
-      ${doc_tile("Rescheduled", d.rescheduledToday, `Moved`, "R", "sage")}
+    <div style="margin-top:12px; color: var(--muted); font-weight:700;">
+      Loading doctor dashboard...
     </div>
   `;
 
-  /* CHANGE 3:
-     Protected queue data and escaped patient names.
-  */
-  const rows = (Array.isArray(d.checkedInQueue) ? d.checkedInQueue : []).map(a => `
-    <tr>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${escapeHtml(a.Patient_Last)}, ${escapeHtml(a.Patient_First)}</td>
-      <td>${fmtDT(a.Scheduled_End)}</td>
-      <td><button class="small primary" onclick="doc_open(${a.Appointment_ID})">Open</button></td>
-    </tr>
-  `).join("");
+  try {
+    const d = await apiSafe("api/doctor/dashboard_summary.php");
 
-  queueWrap.innerHTML = `
-    <div class="section">
-      <div class="section-title">
-        <h3>Checked-In Queue</h3>
-        <div class="tools">
-          <button class="ghost" onclick="doc_loadTilesAndQueue()">Refresh</button>
+    /* CHANGE 3:
+       Keep the main tiles, but protect values with null fallback.
+    */
+    tilesWrap.innerHTML = `
+      <div class="tiles">
+        ${doc_tile("Appointments Today", d.totalToday ?? 0, "All statuses", "C", "gold")}
+        ${doc_tile("Scheduled", d.scheduledToday ?? 0, "Upcoming", "S", "teal")}
+        ${doc_tile("Checked-In", d.checkedInToday, "Ready now", "CI", "dark")}
+        ${doc_tile("Completed", d.completedToday, "Finished", "OK", "teal")}
+        ${doc_tile("Cancelled", d.cancelledToday, "Cancelled", "X", "gold")}
+        ${doc_tile("Rescheduled", d.rescheduledToday ?? 0, "Moved", "R", "sage")}
+      </div>
+    `;
+
+    if (!queueWrap) return;
+
+    /* CHANGE 4:
+       Protected queue data and escaped patient names.
+    */
+    const rows = (Array.isArray(d.checkedInQueue) ? d.checkedInQueue : []).map(a => `
+      <tr>
+        <td>${fmtDT(a.Scheduled_Start)}</td>
+        <td>${escapeHtml(a.Patient_Last)}, ${escapeHtml(a.Patient_First)}</td>
+        <td>${fmtDT(a.Scheduled_End)}</td>
+        <td><button class="small primary" onclick="doc_open(${a.Appointment_ID})">Open</button></td>
+      </tr>
+    `).join("");
+
+    queueWrap.innerHTML = `
+      <div class="section">
+        <div class="section-title">
+          <h3>Checked-In Queue</h3>
+          <div class="tools">
+            <button class="ghost" onclick="doc_loadTilesAndQueue()">Refresh</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Start</th><th>Patient</th><th>End</th><th>Action</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="4">No checked-in patients right now.</td></tr>`}</tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    console.error("doc_loadTilesAndQueue failed:", err);
+
+    /* CHANGE 5:
+       If dashboard_summary.php fails, do not leave the screen stuck on loading.
+       Show a clear message instead.
+    */
+    tilesWrap.innerHTML = `
+      <div class="section">
+        <div class="section-title"><h3>Doctor Summary</h3></div>
+        <div style="color:#b00020; font-weight:700;">
+          Failed to load dashboard summary.
         </div>
       </div>
-      <table>
-        <thead><tr><th>Start</th><th>Patient</th><th>End</th><th>Action</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="4">No checked-in patients right now.</td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
+    `;
+
+    if (queueWrap) {
+      queueWrap.innerHTML = `
+        <div class="section">
+          <div class="section-title"><h3>Checked-In Queue</h3></div>
+          <div style="color:#b00020; font-weight:700;">
+            Failed to load checked-in queue.
+          </div>
+        </div>
+      `;
+    }
+  }
 }
 
 function doc_tile(label, value, sub, iconText, tone) {
@@ -117,16 +171,23 @@ function doc_tile(label, value, sub, iconText, tone) {
 }
 
 async function doc_loadSchedule() {
-  const from = document.getElementById("d_from").value;
-  const to = document.getElementById("d_to").value;
+  const fromEl = document.getElementById("d_from");
+  const toEl = document.getElementById("d_to");
+  const listEl = document.getElementById("doc_list");
+  const panelEl = document.getElementById("doc_panel");
 
-  /* CHANGE 4:
-     Removed the duplicate const data line that was breaking the function.
+  /* NOTE:
+     Guard against pages that do not currently have the schedule filter fields.
   */
+  if (!fromEl || !toEl || !listEl) return;
+
+  const from = fromEl.value;
+  const to = toEl.value;
+
   const data = await apiSafe(`api/doctor/appointments_my.php?from=${from}&to=${to}`);
   const appts = Array.isArray(data.appointments) ? data.appointments : [];
 
-  /* CHANGE 5:
+  /* CHANGE 6:
      Used appts.map instead of data.appointments.map
      and escaped patient names.
   */
@@ -141,7 +202,7 @@ async function doc_loadSchedule() {
     </tr>
   `).join("");
 
-  document.getElementById("doc_list").innerHTML = `
+  listEl.innerHTML = `
     <div class="section">
       <div class="section-title">
         <h3>Schedule</h3>
@@ -156,7 +217,9 @@ async function doc_loadSchedule() {
     </div>
   `;
 
-  document.getElementById("doc_panel").innerHTML = "";
+  if (panelEl) {
+    panelEl.innerHTML = "";
+  }
 }
 
 async function doc_open(appointmentId) {
@@ -164,13 +227,14 @@ async function doc_open(appointmentId) {
   const visit = await apiSafe(`api/doctor/visits_get_or_create.php`, "POST", { appointmentId });
   const notes = await apiSafe(`api/doctor/notes_list.php?visitId=${visit.visitId}`);
 
-  /* CHANGE 6:
+  /* CHANGE 7:
      Escaped note header names too, not just the visit note text.
   */
   const nrows = (Array.isArray(notes.notes) ? notes.notes : []).map(n => `
     <div style="border:1px solid var(--border); padding:12px; margin:10px 0; border-radius:14px;">
       <div style="font-weight:900; color: var(--teal-dark);">
-        ${escapeHtml(n.Last_Name)}, ${escapeHtml(n.First_Name)} <span class="badge" style="margin-left:8px;">${fmtDT(n.Note_DateTime)}</span>
+        ${escapeHtml(n.Last_Name)}, ${escapeHtml(n.First_Name)}
+        <span class="badge" style="margin-left:8px;">${fmtDT(n.Note_DateTime)}</span>
       </div>
       <div style="margin-top:8px; color: var(--text); font-weight:700;">
         ${escapeHtml(n.Visit_Note)}
@@ -192,10 +256,6 @@ async function doc_open(appointmentId) {
       <div class="form-grid">
         <div class="field">
           <label>Patient</label>
-
-          <!-- CHANGE 7:
-               Escaped patient name in the appointment panel.
-          -->
           <input value="${escapeHtml(appt.appointment.Patient_Last)}, ${escapeHtml(appt.appointment.Patient_First)}" disabled>
         </div>
         <div class="field">
@@ -222,12 +282,18 @@ async function doc_open(appointmentId) {
 }
 
 async function doc_saveNote(visitId, appointmentId) {
-  const noteText = document.getElementById("doc_note").value.trim();
+  const noteBox = document.getElementById("doc_note");
+  const noteText = noteBox ? noteBox.value.trim() : "";
+
   if (!noteText) return;
 
   await apiSafe("api/doctor/notes_save.php", "POST", { visitId, noteText });
   toast("Saved", "Note added", "ok");
 
+  /* NOTE:
+     Refresh tiles and queue after saving because note workflows may happen
+     while the doctor is actively working through appointments.
+  */
   if (typeof doc_loadTilesAndQueue === "function") await doc_loadTilesAndQueue();
   await doc_open(appointmentId);
 }
@@ -236,6 +302,9 @@ async function doc_setStatus(appointmentId, status) {
   await apiSafe("api/doctor/appointment_status.php", "POST", { appointmentId, status });
   toast("Updated", `Status set to ${status}`, "ok");
 
+  /* NOTE:
+     Refresh both summary and schedule so counts and rows stay in sync.
+  */
   if (typeof doc_loadTilesAndQueue === "function") await doc_loadTilesAndQueue();
   await doc_loadSchedule();
 }
@@ -255,9 +324,9 @@ function doc_showDashboard() {
 }
 
 /* NOTE:
-   My Schedule tab now uses a more complete card/section layout
-   so it looks closer to the receptionist style.
-   It still uses the existing doc_loadSchedule() function.
+   My Schedule keeps the cleaner tab layout from your branch,
+   but now also reuses the SAME summary tiles and checked-in queue
+   from the dashboard so the doctor sees status cards here too.
 */
 async function doc_showSchedule() {
   const content = document.getElementById("content");
@@ -267,6 +336,13 @@ async function doc_showSchedule() {
     <div class="card">
       <h2>My Schedule</h2>
       <p>View your appointments for the selected date range.</p>
+
+      <!-- NOTE:
+           Reuse the same summary containers from the dashboard.
+           This keeps the main design visible on My Schedule too.
+      -->
+      <div id="doc_tiles"></div>
+      <div id="doc_queue" style="margin-top:16px;"></div>
 
       <div class="section" style="margin-top:16px;">
         <div class="section-title">
@@ -290,29 +366,35 @@ async function doc_showSchedule() {
           <div style="align-self:end;">
             <button class="primary" onclick="doc_loadSchedule()">Load Schedule</button>
           </div>
+
+          <div style="align-self:end;">
+            <button class="ghost" onclick="doc_refreshDay()">Refresh Day</button>
+          </div>
         </div>
       </div>
 
       <!-- NOTE:
-           Schedule table loads here -->
+           Schedule table loads here.
+      -->
       <div id="doc_list" style="margin-top:16px;"></div>
 
       <!-- NOTE:
-           Appointment details / visit note area loads here -->
+           Appointment details / visit note area loads here.
+      -->
       <div id="doc_panel" style="margin-top:16px;"></div>
     </div>
   `;
 
   /* NOTE:
-     Automatically load today's schedule when this tab opens.
+     Load the same summary area used on the main dashboard,
+     then load the schedule list below it.
   */
-  await doc_loadSchedule();
+  await doc_refreshDay();
 }
 
 /* NOTE:
-   Patients tab uses the same card/section/table structure
-   so it visually matches the rest of the app better.
-   This is still a placeholder for now.
+   Patients tab keeps the simpler card/section/table structure.
+   Per your request, do not show the summary tiles here.
 */
 function doc_showPatients() {
   const content = document.getElementById("content");
@@ -351,8 +433,8 @@ function doc_showPatients() {
 }
 
 /* NOTE:
-   Visit Notes tab also uses the same card/section layout.
-   This gives the tab a cleaner structure even before adding more data.
+   Visit Notes tab also stays separate.
+   Per your request, do not show the summary tiles here.
 */
 function doc_showVisitNotes() {
   const content = document.getElementById("content");
