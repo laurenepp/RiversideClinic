@@ -1,16 +1,8 @@
 <?php
 require_once "../utils.php";
-
-/* NOTE:
-   Keep the same doctor role protection used by the rest of the API.
-*/
 $user = require_role("Doctor");
 
-/* NOTE:
-   doctor.js sends appointmentId in the query string when Open is clicked.
-*/
 $appointmentId = isset($_GET["appointmentId"]) ? (int)$_GET["appointmentId"] : 0;
-
 if ($appointmentId <= 0) {
   http_response_code(400);
   echo json_encode(["error" => "appointmentId required"]);
@@ -52,8 +44,7 @@ if (!$row) {
   echo json_encode(["error" => "Appointment not found"]);
   exit;
 }
-
-/* NOTE:
+ /* NOTE:
    doctor.js expects JSON in this exact shape:
    { appointment: {...} }
 */

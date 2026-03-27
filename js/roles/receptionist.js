@@ -1,6 +1,6 @@
 // js/roles/receptionist.js
 
-function loadReception(){
+function loadReceptionist(){
   const content = document.getElementById("dash_view") || document.getElementById("content");
   content.innerHTML = `
     <div class="card">
@@ -9,14 +9,7 @@ function loadReception(){
 
       <div id="rx_tiles"></div>
 
-      <div class="section">
-        <div class="section-title">
-          <h3>Quick Actions</h3>
-          <div class="tools">
-            <button class="primary" onclick="rx_showPatientSearch()">Search Patients</button>
-            <button class="secondary" onclick="rx_showPatientCreate()">Register Patient</button>
-            <button class="ghost" onclick="rx_showAppointmentBoard()">Appointments Board</button>
-          </div>
+                
         </div>
       </div>
 
@@ -46,9 +39,9 @@ async function rx_loadTilesAndNext(){
       ${rx_tile("Patients (Total)", d.totalPatients, `Clinic registry`, "P", "sage")}
       ${rx_tile("Appointments Today", d.appointmentsToday, `All statuses`, "C", "gold")}
       ${rx_tile("Scheduled Today", d.scheduledToday, `Upcoming visits`, "S", "teal")}
-      ${rx_tile("Checked-In Today", d.checkedInToday, `Waiting/arrived`, "\u2713", "dark")}
-      ${rx_tile("Completed Today", d.completedToday, `Finished`, "\u2713", "teal")}
-      ${rx_tile("Cancelled Today", d.cancelledToday, `Cancelled`, "\u2715", "gold")}
+      ${rx_tile("Checked-In Today", d.checkedInToday, `Waiting/arrived`, "&#10003;", "dark")}
+      ${rx_tile("Completed Today", d.completedToday, `Finished`, "&#10003;", "teal")}
+      ${rx_tile("Cancelled Today", d.cancelledToday, `Cancelled`, "&#10005;", "danger")}
     </div>
   `;
 
@@ -252,282 +245,70 @@ function rx_showPatientCreate() {
     </div>
 
     <div class="row" style="margin-top:12px;">
-      <button class="primary" onclick="rx_createPatient()">Create Patient</button>
-    </div>
-
-    <div id="rx_msg" style="margin-top:10px;"></div>
-  `);
-}
-async function rx_createPatient(){
-  const firstName = document.getElementById("p_first").value.trim();
-  const lastName  = document.getElementById("p_last").value.trim();
-  const phone     = document.getElementById("p_phone").value.trim();
-  const email     = document.getElementById("p_email").value.trim();
-  const dob       = document.getElementById("p_dob").value;
-
-  const emergencyFirstName = document.getElementById("ec_first").value.trim();
-  const emergencyLastName  = document.getElementById("ec_last").value.trim();
-  const emergencyPhone     = document.getElementById("ec_phone").value.trim();
-  const emergencyRelationship = document.getElementById("ec_relationship").value.trim();
-
-  const insuranceProvider = document.getElementById("ins_provider").value.trim();
-  const insuranceStatus   = document.getElementById("ins_status").value;
-  const insuranceDateSent = document.getElementById("ins_date_sent").value;
-
-  const res = await api("api/receptionist/patients_create.php", "POST", {
-    firstName,
-    lastName,
-    phone,
-    email,
-    dob,
-    emergencyFirstName,
-    emergencyLastName,
-    emergencyPhone,
-    emergencyRelationship,
-    insuranceProvider,
-    insuranceStatus,
-    insuranceDateSent
-  });
-
-  toast("Patient created", `Patient ID ${res.patientId}`, "ok");
-
-  document.getElementById("rx_msg").innerHTML = `
-    <span class="badge teal">Created Patient ID: ${res.patientId}</span>
-  `;
-
-  await rx_loadTilesAndNext();
-}
-function rx_editPatient(p){
-  rx_panel(`
-    <div class="section-title">
-      <h3>Edit Patient #${p.Patient_ID}</h3>
-      <div class="tools">
-        <button class="ghost" onclick="rx_showPatientSearch()">Back</button>
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="field"><label>First Name</label><input id="e_first" value="${p.First_Name}"></div>
-      <div class="field"><label>Last Name</label><input id="e_last" value="${p.Last_Name}"></div>
-      <div class="field"><label>Phone</label><input id="e_phone" value="${p.Phone_Number}"></div>
-      <div class="field"><label>Email</label><input id="e_email" value="${p.Email ?? ""}"></div>
-      <div class="field"><label>Date of Birth</label><input id="e_dob" type="date" value="${p.Date_Of_Birth}"></div>
-    </div>
-
-    <div class="row" style="margin-top:12px;">
-      <button class="primary" onclick="rx_updatePatient(${p.Patient_ID})">Save</button>
+      <button class="primary" onclick="rx_createPatient()">Register Patient</button>
     </div>
 
     <div id="rx_msg" style="margin-top:10px;"></div>
   `);
 }
 
-async function rx_updatePatient(patientId){
-  const firstName = document.getElementById("e_first").value.trim();
-  const lastName  = document.getElementById("e_last").value.trim();
-  const phone     = document.getElementById("e_phone").value.trim();
-  const email     = document.getElementById("e_email").value.trim();
-  const dob       = document.getElementById("e_dob").value;
+async function rx_createPatient() {
+  const payload = {
+    firstName: document.getElementById("p_first")?.value.trim() || "",
+    lastName: document.getElementById("p_last")?.value.trim() || "",
+    phone: document.getElementById("p_phone")?.value.trim() || "",
+    email: document.getElementById("p_email")?.value.trim() || "",
+    dob: document.getElementById("p_dob")?.value || "",
 
-  await api("api/receptionist/patients_update.php","POST",{patientId,firstName,lastName,phone,email,dob});
-  toast("Saved", "Patient updated", "ok");
-  document.getElementById("rx_msg").innerHTML = `<span class="badge teal">Saved</span>`;
-  await rx_loadTilesAndNext();
+    emergencyName: [
+      document.getElementById("ec_first")?.value.trim() || "",
+      document.getElementById("ec_last")?.value.trim() || ""
+    ].filter(Boolean).join(" "),
+    emergencyPhone: document.getElementById("ec_phone")?.value.trim() || "",
+    emergencyRelation: document.getElementById("ec_relationship")?.value.trim() || "",
+
+    insuranceProvider: document.getElementById("ins_provider")?.value.trim() || "",
+    insuranceStatus: document.getElementById("ins_status")?.value || "",
+    insuranceDate: document.getElementById("ins_date_sent")?.value || ""
+  };
+
+  if (!payload.firstName || !payload.lastName || !payload.dob) {
+    toast("Missing Information", "First name, last name, and date of birth are required.", "err");
+    return;
+  }
+
+  const msg = document.getElementById("rx_msg");
+  if (msg) msg.innerHTML = "Creating patient...";
+
+  try {
+    const result = await api("api/receptionist/patients_create.php", "POST", payload);
+
+    if (msg) {
+      msg.innerHTML = `<div class="ok">Patient created successfully. Patient ID: ${result.patientId}</div>`;
+    }
+
+    toast("Success", "Patient registered successfully.", "ok");
+    rx_loadTilesAndNext();
+  } catch (err) {
+    if (msg) {
+      msg.innerHTML = `<div class="err">Failed to register patient.</div>`;
+    }
+    throw err;
+  }
 }
 
-/* -------------------------
-   APPOINTMENTS
-------------------------- */
-
-async function rx_showAppointmentBoard(){
-  const today = new Date().toISOString().slice(0,10);
-
+function rx_showAppointmentBoard() {
   rx_panel(`
     <div class="section-title">
       <h3>Appointments Board</h3>
       <div class="tools">
-        <button class="primary" onclick="rx_showAppointmentCreate()">Schedule New</button>
-        <button class="ghost" onclick="rx_loadAppointments()">Refresh</button>
+        <button class="ghost" onclick="rx_panel('')">Close</button>
       </div>
     </div>
-
-    <div class="row compact">
-      <div class="field"><label>From</label><input id="a_from" type="date" value="${today}"></div>
-      <div class="field"><label>To</label><input id="a_to" type="date" value="${today}"></div>
-      <div style="align-self:end;">
-        <button class="secondary" onclick="rx_loadAppointments()">Load</button>
-      </div>
-    </div>
-
-    <div id="rx_appts" style="margin-top:12px;"></div>
-  `);
-
-  await rx_loadAppointments();
-}
-
-async function rx_loadAppointments(){
-  const from = document.getElementById("a_from").value;
-  const to   = document.getElementById("a_to").value;
-
-  const data = await api(`api/receptionist/appointments_list.php?from=${from}&to=${to}`);
-
-  const rows = data.appointments.map(a => `
-    <tr>
-      <td>${a.Appointment_ID}</td>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${fmtDT(a.Scheduled_End)}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
-      <td>${a.Patient_Last}, ${a.Patient_First}</td>
-      <td>Dr. ${a.Provider_Last}</td>
-      <td>
-        <button class="small" onclick='rx_editAppointment(${JSON.stringify(a)})'>Edit</button>
-        <button class="small gold" onclick='rx_cancelAppointment(${a.Appointment_ID})'>Cancel</button>
-        <button class="small secondary" onclick='rx_checkin(${a.Appointment_ID})'>Check-In</button>
-      </td>
-    </tr>
-  `).join("");
-
-  document.getElementById("rx_appts").innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th><th>Start</th><th>End</th><th>Status</th><th>Patient</th><th>Provider</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>${rows || `<tr><td colspan="7">No appointments</td></tr>`}</tbody>
-    </table>
-  `;
-}
-
-async function rx_showAppointmentCreate(){
-  const providers = await api("api/receptionist/providers_list.php");
-  const providerOptions = providers.providers.map(p =>
-    `<option value="${p.User_ID}">${p.Last_Name}, ${p.First_Name}</option>`
-  ).join("");
-
-  rx_panel(`
-    <div class="section-title">
-      <h3>Schedule Appointment</h3>
-      <div class="tools">
-        <button class="ghost" onclick="rx_showAppointmentBoard()">Back</button>
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="field">
-        <label>Patient ID</label>
-        <input id="ap_patientId" placeholder="Patient ID">
-        <div class="hint">Tip: search patient first, then use their ID.</div>
-      </div>
-
-      <div class="field">
-        <label>Provider</label>
-        <select id="ap_providerId">${providerOptions}</select>
-      </div>
-
-      <div class="field">
-        <label>Start</label>
-        <input id="ap_start" type="datetime-local">
-      </div>
-
-      <div class="field">
-        <label>End</label>
-        <input id="ap_end" type="datetime-local">
-        <div class="hint">Variable duration allowed.</div>
-      </div>
-    </div>
-
-    <div class="row" style="margin-top:12px;">
-      <button class="primary" onclick="rx_createAppointment()">Create Appointment</button>
-    </div>
-
-    <div id="rx_msg" style="margin-top:10px;"></div>
+    <p>Appointments board is not wired yet.</p>
   `);
 }
 
-async function rx_createAppointment(){
-  const patientId = parseInt(document.getElementById("ap_patientId").value, 10);
-  const providerUserId = parseInt(document.getElementById("ap_providerId").value, 10);
-  const startDateTime = document.getElementById("ap_start").value;
-  const endDateTime   = document.getElementById("ap_end").value;
-
-  const res = await api("api/receptionist/appointments_create.php","POST",{
-    patientId, providerUserId, startDateTime, endDateTime
-  });
-
-  if (typeof rx_loadTilesAndNext === "function") await rx_loadTilesAndNext();
-
-  if (document.getElementById("rx_appts")) await rx_loadAppointments();
-
-  toast("Appointment created", `Appointment ID ${res.appointmentId}`, "ok");
-  document.getElementById("rx_msg").innerHTML = `<span class="badge teal">Created Appointment ID: ${res.appointmentId}</span>`;
-
-}
-
-function rx_editAppointment(a){
-  rx_panel(`
-    <div class="section-title">
-      <h3>Edit Appointment #${a.Appointment_ID}</h3>
-      <div class="tools">
-        <button class="ghost" onclick="rx_showAppointmentBoard()">Back</button>
-      </div>
-    </div>
-
-    <div class="form-grid">
-      <div class="field">
-        <label>Patient</label>
-        <input value="${a.Patient_Last}, ${a.Patient_First}" disabled>
-      </div>
-
-      <div class="field">
-        <label>Provider User ID</label>
-        <input id="ea_providerId" value="${a.Provider_ID}">
-      </div>
-
-      <div class="field">
-        <label>Start</label>
-        <input id="ea_start" type="datetime-local" value="${a.Scheduled_Start.replace(' ','T').slice(0,16)}">
-      </div>
-
-      <div class="field">
-        <label>End</label>
-        <input id="ea_end" type="datetime-local" value="${a.Scheduled_End.replace(' ','T').slice(0,16)}">
-      </div>
-    </div>
-
-    <div class="row" style="margin-top:12px;">
-      <button class="primary" onclick="rx_updateAppointment(${a.Appointment_ID})">Save</button>
-    </div>
-
-    <div id="rx_msg" style="margin-top:10px;"></div>
-  `);
-}
-
-async function rx_updateAppointment(appointmentId){
-  const providerUserId = parseInt(document.getElementById("ea_providerId").value, 10);
-  const startDateTime = document.getElementById("ea_start").value;
-  const endDateTime   = document.getElementById("ea_end").value;
-
-  await api("api/receptionist/appointments_update.php","POST",{
-    appointmentId, providerUserId, startDateTime, endDateTime
-  });
-
-  toast("Saved", "Appointment updated", "ok");
-  document.getElementById("rx_msg").innerHTML = `<span class="badge teal">Saved</span>`;
-
-  await rx_loadTilesAndNext();
-}
-
-async function rx_cancelAppointment(appointmentId){
-  await api("api/receptionist/appointments_cancel.php","POST",{appointmentId});
-  toast("Updated", "Appointment cancelled", "ok");
-  await rx_loadAppointments();
-  await rx_loadTilesAndNext();
-}
-
-async function rx_checkin(appointmentId){
-  await api("api/receptionist/appointments_checkin.php","POST",{appointmentId});
-  toast("Checked in", `Appointment #${appointmentId}`, "ok");
-  if (document.getElementById("rx_appts")) await rx_loadAppointments();
-  await rx_loadTilesAndNext();
+async function rx_checkin(appointmentId) {
+  toast("Not Ready", `Check-in for appointment ${appointmentId} is not wired yet.`, "err");
 }

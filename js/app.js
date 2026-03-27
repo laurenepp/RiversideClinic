@@ -455,26 +455,50 @@ function rx_home() {
 }
 
 function rx_patients() {
+  if (typeof loadReceptionist === "function") {
+    loadReceptionist();
+    setTimeout(() => {
+      if (typeof rx_showPatientCreate === "function") {
+        rx_showPatientCreate();
+      }
+    }, 0);
+    return;
+  }
+
   setView(`
     <h2>Patients</h2>
-    <p>TODO: Search/create patients.</p>
+    <p>Patient registration is not available right now.</p>
   `);
 }
 
 function rx_appointments() {
+  if (typeof loadReceptionist === "function") {
+    loadReceptionist();
+    setTimeout(() => {
+      if (typeof rx_showAppointmentBoard === "function") {
+        rx_showAppointmentBoard();
+      }
+    }, 0);
+    return;
+  }
+
   setView(`
     <h2>Appointments</h2>
-    <p>TODO: Schedule/reschedule appointments.</p>
+    <p>Appointments are not available right now.</p>
   `);
 }
 
 function rx_checkin() {
+  if (typeof loadReceptionist === "function") {
+    loadReceptionist();
+    return;
+  }
+
   setView(`
     <h2>Check-In</h2>
-    <p>TODO: Front desk check-in workflow.</p>
+    <p>Front desk check-in workflow is not available right now.</p>
   `);
 }
-
 // -----------------------------
 // Start app
 // -----------------------------

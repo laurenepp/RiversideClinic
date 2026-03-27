@@ -1408,3 +1408,123 @@ details summary::before {
 details[open] summary::before {
   content: "-";
 }
+/* ==== Receptionist dashboard tiles only ==== */
+
+
+#rx_tiles .tile{
+  position:relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 12px 12px 10px 12px;
+  overflow:hidden;
+  min-height: 92px;
+}
+
+#rx_tiles .tile .value{
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 6px;
+  color: #1E2A2A;
+}
+
+#rx_tiles .tile::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width: 64px;
+  height: 64px;
+  border-bottom-right-radius: 20px;
+  opacity: 0.85;
+}
+
+#rx_tiles .tile .icon{
+  position:absolute;
+  left: 12px;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.22);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:900;
+  font-size:14px;
+}
+
+#rx_tiles .tile .content{
+  margin-left: 72px;
+}
+/* ==== Receptionist tiles — force single row ==== */
+
+#rx_tiles .tiles{
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); /* 6 tiles = 1 row */
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Make tiles smaller so they fit */
+#rx_tiles .tile{
+  min-height: 78px;
+  padding: 10px;
+}
+
+/* Smaller numbers */
+#rx_tiles .tile .value{
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+/* Smaller label */
+#rx_tiles .tile .label{
+  font-size: 12px;
+}
+
+/* Smaller icon */
+#rx_tiles .tile .icon{
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+  left: 10px;
+  top: 10px;
+}
+
+/* Adjust spacing so text still fits */
+#rx_tiles .tile .content{
+  margin-left: 60px;
+}
+
+/* ==== Receptionist tile gradients ==== */
+
+#rx_tiles .tile.sage::before{
+  background: linear-gradient(135deg, #C7DED6, #8FB1A4);
+}
+
+#rx_tiles .tile.gold::before{
+  background: linear-gradient(135deg, #F1D79C, #D5AE60);
+}
+
+#rx_tiles .tile.teal::before{
+  background: linear-gradient(135deg, #6FAFB1, #4E888A);
+}
+
+#rx_tiles .tile.dark::before{
+  background: linear-gradient(135deg, #5C84B1, #2F6668);
+}
+#rx_tiles .tile .label{
+  font-size: 12px;
+  min-height: 36px;        /* force equal height */
+  line-height: 1.2;        /* tighten spacing */
+  display: flex;
+  align-items: flex-start; /* keep text top aligned */
+}
+/* ==== Receptionist danger (cancelled) ==== */
+
+#rx_tiles .tile.danger::before{
+  background: linear-gradient(135deg, #E57373, #B71C1C);
+}

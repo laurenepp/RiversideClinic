@@ -2,42 +2,47 @@
 require_once "../utils.php";
 require_role("Administrator");
 
-$from = $_GET["from"] ?? "";
-$to   = $_GET["to"] ?? "";
+// Optional filters
+$from = $_GET['from'] ?? null;
+$to   = $_GET['to'] ?? null;
+$status = $_GET['status'] ?? null;
 
-if ($from === "" || $to === "") {
-  http_response_code(400);
-  echo json_encode(["error" => "from/to required (YYYY-MM-DD)"]);
-  exit;
+$params = [];
+$where = [];
+
+if ($from && $to) {
+  $where[] = "a.Scheduled_Start BETWEEN ? AND ?";
+  $params[] = $from . " 00:00:00";
+  $params[] = $to . " 23:59:59";
 }
 
-$fromDT = $from . " 00:00:00";
-$toDT   = $to   . " 23:59:59";
+if ($status) {
+  $where[] = "a.Status = ?";
+  $params[] = $status;
+}
 
-$stmt = $pdo->prepare("
-  SELECT
-    a.Appointment_ID, a.Scheduled_Start, a.Scheduled_End, a.Status,
-    p.Last_Name AS Patient_Last, p.First_Name AS Patient_First,
-    u.Last_Name AS Provider_Last, u.First_Name AS Provider_First
-  FROM Appointments a
-  JOIN Patients p ON a.Patient_ID = p.Patient_ID
-  JOIN Users u ON a.Provider_User_ID = u.User_ID
-  WHERE a.Scheduled_Start BETWEEN ? AND ?
-  ORDER BY a.Scheduled_Start ASC
-");
-$stmt->execute([$fromDT, $toDT]);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$whereSQL = "";
+if (!empty($where)) {
+  $whereSQL = "WHERE " . implode(" AND ", $where);
+}
 
-// Totals by status
-$stmt2 = $pdo->prepare("
-  SELECT Status, COUNT(*) AS Count
-  FROM Appointments
-  WHERE Scheduled_Start BETWEEN ? AND ?
-  GROUP BY Status
-");
-$stmt2->execute([$fromDT, $toDT]);
+$sql = "
+SELECT
+  a.Appointment_ID,
+  a.Scheduled_Start,
+  a.Status,
+  p.First_Name,
+  p.Last_Name,
+  u.First_Name AS Provider_First,
+  u.Last_Name AS Provider_Last
+FROM Appointment a
+JOIN Patient p ON a.Patient_ID = p.Patient_ID
+JOIN Users u ON a.Provider_User_ID = u.User_ID
+$whereSQL
+ORDER BY a.Scheduled_Start DESC
+";
 
-echo json_encode([
-  "appointments" => $rows,
-  "totalsByStatus" => $stmt2->fetchAll(PDO::FETCH_ASSOC)
-]);
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+
+echo json_encode($stmt->fetchAll());

@@ -12,13 +12,13 @@ $totalUsers = (int)$pdo->query("SELECT COUNT(*) FROM Users")->fetchColumn();
 $activeUsers = (int)$pdo->query("SELECT COUNT(*) FROM Users WHERE Is_Disabled = 0")->fetchColumn();
 
 // Appointments today
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM Appointments WHERE Scheduled_Start BETWEEN ? AND ?");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM Appointment WHERE Scheduled_Start BETWEEN ? AND ?");
 $stmt->execute([$fromDT, $toDT]);
 $apptsToday = (int)$stmt->fetchColumn();
 
 // Status counts today
 function countStatus($pdo, $fromDT, $toDT, $status) {
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM Appointments WHERE Scheduled_Start BETWEEN ? AND ? AND Status = ?");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM Appointment WHERE Scheduled_Start BETWEEN ? AND ? AND Status = ?");
   $stmt->execute([$fromDT, $toDT, $status]);
   return (int)$stmt->fetchColumn();
 }

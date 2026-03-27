@@ -41,15 +41,15 @@ function buildMenu(role) {
     return;
   }
 
-  if (safeRole === "receptionist") {
-    menu.innerHTML = `
-      <button class="nav-btn" onclick="rx_home()">Dashboard</button>
-      <button class="nav-btn" onclick="rx_registerPatient()">Register Patient</button>
-      <button class="nav-btn" onclick="rx_appointments()">Appointments</button>
-      <button class="nav-btn logout" onclick="doLogout()">Logout</button>
-    `;
-    return;
-  }
+ if (safeRole === "receptionist") {
+  menu.innerHTML = `
+    <button class="nav-btn" onclick="loadReceptionist()">Dashboard</button>
+    <button class="nav-btn" onclick="loadReceptionist(); setTimeout(() => rx_showPatientCreate(), 0)">Register Patient</button>
+    <button class="nav-btn" onclick="loadReceptionist(); setTimeout(() => rx_showAppointmentBoard(), 0)">Appointments</button>
+    <button class="nav-btn logout" onclick="doLogout()">Logout</button>
+  `;
+  return;
+}
 
   menu.innerHTML = `
     <button class="nav-btn logout" onclick="doLogout()">Logout</button>
