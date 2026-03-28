@@ -314,6 +314,16 @@ function rx_showAppointmentBoard() {
   `);
 }
 
+function receptionistAppointments() {
+  loadAppointmentsPage({
+    role: "receptionist",
+    canCreate: true,
+    canEdit: true,
+    canCheckIn: true,
+    providerScope: "all"
+  });
+}
+
 async function rx_checkin(appointmentId) {
   toast("Not Ready", `Check-in for appointment ${appointmentId} is not wired yet.`, "err");
 }

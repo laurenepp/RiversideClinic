@@ -45,7 +45,7 @@ function buildMenu(role) {
   menu.innerHTML = `
     <button class="nav-btn" onclick="loadReceptionist()">Dashboard</button>
     <button class="nav-btn" onclick="loadReceptionistPatientCreate()">Register Patient</button>
-    <button class="nav-btn" onclick="loadReceptionist(); setTimeout(() => rx_showAppointmentBoard(), 0)">Appointments</button>
+    <button class="nav-btn" onclick="receptionistAppointments()">Appointments</button>
     <button class="nav-btn logout" onclick="doLogout()">Logout</button>
   `;
   return;

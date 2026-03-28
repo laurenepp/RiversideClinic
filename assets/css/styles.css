@@ -1528,3 +1528,187 @@ details[open] summary::before {
 #rx_tiles .tile.danger::before{
   background: linear-gradient(135deg, #E57373, #B71C1C);
 }
+
+.appt-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.appt-page-header h2 {
+  margin: 0;
+}
+
+.appt-subdate {
+  margin-top: 6px;
+  color: #666;
+  font-size: 14px;
+}
+
+.appt-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.appt-toolbar-left,
+.appt-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.appt-date-pill {
+  font-weight: 700;
+  font-size: 20px;
+  min-width: 240px;
+  text-align: center;
+}
+
+.appt-nav-btn {
+  font-size: 24px;
+  line-height: 1;
+  min-width: 44px;
+}
+
+.appt-view-toggle {
+  display: flex;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.appt-view-toggle button {
+  border-radius: 0;
+}
+
+.appt-grid {
+  display: grid;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.appt-head {
+  padding: 16px;
+  font-weight: 700;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.appt-time-head {
+  text-align: left;
+}
+
+.appt-time-cell {
+  padding: 16px;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #eee;
+  color: #444;
+  font-weight: 500;
+  min-height: 72px;
+}
+
+.appt-cell {
+  position: relative;
+  min-height: 72px;
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 8px;
+}
+
+.appt-card {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  height: calc(100% - 4px);
+  box-sizing: border-box;
+}
+
+.appt-card.green {
+  background: #dff3e4;
+}
+
+.appt-card.blue {
+  background: #dfeafe;
+}
+
+.appt-card.gray {
+  background: #ececec;
+}
+
+.appt-patient {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.appt-type {
+  margin-bottom: 6px;
+}
+
+.appt-duration {
+  font-size: 13px;
+  color: #444;
+}
+
+#appt_patient_selected .ok {
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.appt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.appt-modal {
+  width: min(720px, 100%);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.appt-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.appt-modal-header h3 {
+  margin: 0;
+}
+
+.appt-modal-sub {
+  margin-top: 6px;
+  color: #666;
+  font-size: 14px;
+}
+
+.appt-modal-body {
+  padding: 22px;
+}
+
+.appt-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 22px;
+  border-top: 1px solid #e5e5e5;
+  background: #fafafa;
+}
