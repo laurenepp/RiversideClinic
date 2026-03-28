@@ -2,18 +2,49 @@
 require_once "../utils.php";
 
 /* NOTE:
-   Keep doctor-only access.
+   Doctor only. This endpoint creates or reuses the visit record
+   tied to the appointment the doctor is opening.
 */
 $user = require_role("Doctor");
 
-$appointmentId = isset($_GET["appointmentId"]) ? (int)$_GET["appointmentId"] : 0;
+/* NOTE:
+   doctor.js sends POST JSON with { appointmentId }.
+*/
+$data = read_json();
+$appointmentId = (int)($data["appointmentId"] ?? 0);
+
 if ($appointmentId <= 0) {
-    http_response_code(400);
-    echo json_encode(["error" => "appointmentId required"]);
-    exit;
+  http_response_code(400);
+  echo json_encode(["error" => "appointmentId required"]);
+  exit;
 }
 
-// Check if visit already exists
+/* NOTE:
+   Make sure the appointment belongs to the logged-in doctor.
+*/
+$stmt = $pdo->prepare("
+  SELECT
+    Appointment_ID,
+    Patient_ID,
+    Provider_User_ID,
+    Scheduled_Start
+  FROM Appointment
+  WHERE Appointment_ID = ?
+    AND Provider_User_ID = ?
+  LIMIT 1
+");
+$stmt->execute([$appointmentId, $user["id"]]);
+$appt = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$appt) {
+  http_response_code(404);
+  echo json_encode(["error" => "Appointment not found"]);
+  exit;
+}
+
+/* NOTE:
+   Reuse an existing visit if one is already attached to this appointment.
+*/
 $stmt = $pdo->prepare("
   SELECT Visit_ID
   FROM Visit
@@ -21,46 +52,39 @@ $stmt = $pdo->prepare("
   LIMIT 1
 ");
 $stmt->execute([$appointmentId]);
-$visit = $stmt->fetch(PDO::FETCH_ASSOC);
+$existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($visit) {
+if ($existing) {
   echo json_encode([
-    "visitId" => $visit["Visit_ID"]
+    "visitId" => (int)$existing["Visit_ID"],
+    "created" => false
   ]);
   exit;
 }
 
-// Get appointment info to create visit
+/* NOTE:
+   Create the visit the first time the doctor opens the chart.
+   Visit_DateTime is required by the schema.
+*/
 $stmt = $pdo->prepare("
-  SELECT Patient_ID, Provider_User_ID
-  FROM Appointment
-  WHERE Appointment_ID = ?
-  LIMIT 1
-");
-$stmt->execute([$appointmentId]);
-$existingVisit = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if ($existingVisit) {
-    echo json_encode([
-        "visitId" => (int)$existingVisit["Visit_ID"]
-    ]);
-    exit;
-}
-
-// Create visit
-$stmt = $pdo->prepare("
-  INSERT INTO Visit (Appointment_ID, Patient_ID, Provider_User_ID, Created_By_User_ID)
-  VALUES (?, ?, ?, ?)
+  INSERT INTO Visit (
+    Created_By_User_ID,
+    Appointment_ID,
+    Patient_ID,
+    Provider_User_ID,
+    Visit_DateTime
+  )
+  VALUES (?, ?, ?, ?, ?)
 ");
 $stmt->execute([
+  $user["id"],
   $appointmentId,
   $appt["Patient_ID"],
   $appt["Provider_User_ID"],
-  $user["id"]
+  $appt["Scheduled_Start"]
 ]);
 
-$visitId = $pdo->lastInsertId();
-
 echo json_encode([
-  "visitId" => $visitId
+  "visitId" => (int)$pdo->lastInsertId(),
+  "created" => true
 ]);

@@ -1,8 +1,13 @@
 <?php
 require_once "../utils.php";
+
+/* NOTE:
+   Doctor only. This returns patient identity details plus the shared
+   appointment status and the separate doctor case status.
+*/
 $user = require_role("Doctor");
 
-$appointmentId = isset($_GET["appointmentId"]) ? (int)$_GET["appointmentId"] : 0;
+$appointmentId = (int)($_GET["appointmentId"] ?? 0);
 if ($appointmentId <= 0) {
   http_response_code(400);
   echo json_encode(["error" => "appointmentId required"]);
@@ -10,9 +15,27 @@ if ($appointmentId <= 0) {
 }
 
 /* NOTE:
-   Keep the main version layout, but preserve the richer patient fields
-   already present there so the appointment drawer can show more detail.
+   Gender may not exist in every copy of the database yet,
+   so detect it first and safely return NULL if missing.
 */
+$genderExists = false;
+
+try {
+  $colStmt = $pdo->prepare("
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'Patient'
+      AND COLUMN_NAME = 'Gender'
+  ");
+  $colStmt->execute();
+  $genderExists = ((int)$colStmt->fetchColumn() > 0);
+} catch (Throwable $e) {
+  $genderExists = false;
+}
+
+$genderSelect = $genderExists ? "p.Gender AS Gender" : "NULL AS Gender";
+
 $stmt = $pdo->prepare("
   SELECT
     a.Appointment_ID,
@@ -21,10 +44,11 @@ $stmt = $pdo->prepare("
     a.Scheduled_Start,
     a.Scheduled_End,
     a.Status,
+    a.Doctor_Case_Status,
     p.First_Name AS Patient_First,
     p.Last_Name AS Patient_Last,
     p.Date_Of_Birth,
-    p.Gender,
+    $genderSelect,
     p.Phone_Number,
     p.Email
   FROM Appointment a
@@ -36,18 +60,10 @@ $stmt = $pdo->prepare("
 $stmt->execute([$appointmentId, $user["id"]]);
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-/* NOTE:
-   Only allow the logged-in doctor to open appointments assigned to them.
-*/
 if (!$row) {
   http_response_code(404);
   echo json_encode(["error" => "Appointment not found"]);
   exit;
 }
- /* NOTE:
-   doctor.js expects JSON in this exact shape:
-   { appointment: {...} }
-*/
-echo json_encode([
-  "appointment" => $row
-]);
+
+echo json_encode(["appointment" => $row]);

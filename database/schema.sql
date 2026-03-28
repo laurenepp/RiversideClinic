@@ -159,6 +159,7 @@ CREATE TABLE `Appointment` (
   `Scheduled_Start` DATETIME NOT NULL,
   `Scheduled_End` DATETIME NOT NULL,
   `Status` VARCHAR(20) NOT NULL,
+  `Doctor_Case_Status` VARCHAR(20) NULL,
   PRIMARY KEY (`Appointment_ID`),
   KEY `idx_Appointment_Patient_ID` (`Patient_ID`),
   KEY `idx_Appointment_Provider_User_ID` (`Provider_User_ID`),
@@ -253,3 +254,40 @@ CREATE TABLE `Audit_Log` (
     FOREIGN KEY (`User_ID`) REFERENCES `Users` (`User_ID`)
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/* NOTE:
+   One editable exam sheet per visit, including vitals and narrative notes.
+*/
+CREATE TABLE IF NOT EXISTS VisitExam (
+  Visit_ID INT NOT NULL,
+  Nurse_Intake_Note TEXT NULL,
+  Doctor_Exam_Note TEXT NULL,
+  Blood_Pressure VARCHAR(30) NULL,
+  Pulse VARCHAR(20) NULL,
+  Respiration VARCHAR(20) NULL,
+  Temperature VARCHAR(20) NULL,
+  Oxygen_Saturation VARCHAR(20) NULL,
+  Height VARCHAR(20) NULL,
+  Weight VARCHAR(20) NULL,
+  Pain_Level VARCHAR(20) NULL,
+  Updated_By_User_ID INT NULL,
+  Updated_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (Visit_ID),
+  CONSTRAINT fk_visitexam_visit
+    FOREIGN KEY (Visit_ID) REFERENCES Visit(Visit_ID),
+  CONSTRAINT fk_visitexam_user
+    FOREIGN KEY (Updated_By_User_ID) REFERENCES `User`(User_ID)
+);
+
+/* NOTE:
+    one editable medication list per visit, with freeform text for now.
+*/
+CREATE TABLE IF NOT EXISTS VisitMedication (
+  Visit_ID INT NOT NULL,
+  Current_Medications TEXT NULL,
+  Medication_Changes TEXT NULL,
+  Medication_Notes TEXT NULL,
+  Updated_By_User_ID INT NULL,
+  Updated_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (Visit_ID)
+);
