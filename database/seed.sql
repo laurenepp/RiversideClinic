@@ -67,3 +67,4 @@ Provider_User_ID = VALUES(Provider_User_ID),
 Scheduled_Start  = VALUES(Scheduled_Start),
 Scheduled_End    = VALUES(Scheduled_End),
 Status           = VALUES(Status);
+
