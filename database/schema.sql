@@ -1,29 +1,9 @@
--- Clean MySQL schema (phpMyAdmin-friendly)
--- Generated 2026-03-01
-
 DROP DATABASE IF EXISTS riversideclinicdb;
 CREATE DATABASE riversideclinicdb;
 USE riversideclinicdb;
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS `Visit_Notes`;
-DROP TABLE IF EXISTS `Visit`;
-DROP TABLE IF EXISTS `Appointment`;
-DROP TABLE IF EXISTS `Provider_Schedule`;
-DROP TABLE IF EXISTS `Nurse_Assignments`;
-DROP TABLE IF EXISTS `Insurance_Info`;
-DROP TABLE IF EXISTS `Patient_Emergency_Contacts`;
-DROP TABLE IF EXISTS `Emergency_Contact`;
-DROP TABLE IF EXISTS `Audit_Log`;
-DROP TABLE IF EXISTS `User_Login_Info`;
-DROP TABLE IF EXISTS `Permissions`;
-DROP TABLE IF EXISTS `Patient`;
-DROP TABLE IF EXISTS `Users`;
-DROP TABLE IF EXISTS `Roles`;
-
-SET FOREIGN_KEY_CHECKS = 1;
 
 -- =========================
 -- Core Access Control
@@ -73,6 +53,8 @@ CREATE TABLE `User_Login_Info` (
   `User_ID` BIGINT NOT NULL,
   `Username` VARCHAR(64) NOT NULL,
   `Password_Hash` VARCHAR(255) NOT NULL,
+  `Must_Change_Password` TINYINT(1) NOT NULL DEFAULT 1,
+  `Password_Changed_At` DATETIME NULL,
   `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`User_ID`),
   UNIQUE KEY `uk_User_Login_Info_Username` (`Username`),
@@ -253,3 +235,4 @@ CREATE TABLE `Audit_Log` (
     FOREIGN KEY (`User_ID`) REFERENCES `Users` (`User_ID`)
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
