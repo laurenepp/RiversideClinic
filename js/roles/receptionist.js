@@ -308,7 +308,8 @@ function receptionistAppointments() {
     canCreate: true,
     canEdit: true,
     canCheckIn: true,
-    providerScope: "all"
+    providerScope: "all",
+    allowScopeToggle: false
   });
 }
 

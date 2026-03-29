@@ -90,4 +90,25 @@ function nurse_showIntake() {
       <p>Vitals, notes, and intake forms will appear here.</p>
     </div>
   `;
+}function nurse_home() {
+  loadNurse();
+}
+
+function nurseAppointments() {
+  loadAppointmentsPage({
+    role: "nurse",
+    canCreate: false,
+    canEdit: false,
+    canCheckIn: false,
+    providerScope: "all",
+    allowScopeToggle: false
+  });
+}
+
+function nurse_schedule() {
+  nurse_showSchedule();
+}
+
+function nurse_intake() {
+  nurse_showIntake();
 }

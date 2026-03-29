@@ -160,34 +160,55 @@ function admin_showUsers() {
   admin_loadUsers();
 }
 
-async function admin_loadUsers() {
-  const usersWrap = document.getElementById("admin_users");
-  if (usersWrap) {
-    usersWrap.innerHTML = `
-      <table class="admin-users-table">
-        <thead>
-          <tr>
-            <th>USER</th>
-            <th>ROLE</th>
-            <th>STATUS</th>
-            <th>LAST LOGIN</th>
-            <th>ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="5">Loading users...</td>
-          </tr>
-        </tbody>
-      </table>
-    `;
-  }
 
-  try {
-    const res = await fetch("api/admin/users_list.php", {
-      method: "GET",
-      headers: {
-        "Accept": "application/json"
+function admin_loadUsers() {
+  // Only create mock data once
+  if (!window.adminUsersData || !Array.isArray(window.adminUsersData) || !window.adminUsersData.length) {
+    window.adminUsersData = [
+      {
+        User_ID: 1,
+        First_Name: "Reyna",
+        Last_Name: "Administrator",
+        Email: "reyna@clinic.com",
+        Role_Name: "Administrator",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 2,
+        First_Name: "Fernando",
+        Last_Name: "Doctor",
+        Email: "fernando@clinic.com",
+        Role_Name: "Doctor",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 3,
+        First_Name: "Logan",
+        Last_Name: "Nurse",
+        Email: "logan@clinic.com",
+        Role_Name: "Nurse",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 4,
+        First_Name: "Michael",
+        Last_Name: "Phillips",
+        Email: "michael@clinic.com",
+        Role_Name: "Administrator",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
+      },
+      {
+        User_ID: 5,
+        First_Name: "Andrea",
+        Last_Name: "Receptionist",
+        Email: "andrea@clinic.com",
+        Role_Name: "Receptionist",
+        Is_Disabled: 0,
+        Last_Login_At: "-"
       }
     });
 
@@ -830,4 +851,15 @@ function admin_escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function adminAppointments() {
+  loadAppointmentsPage({
+    role: "admin",
+    canCreate: true,
+    canEdit: true,
+    canCheckIn: false,
+    providerScope: "all",
+    allowScopeToggle: false
+  });
 }

@@ -460,3 +460,30 @@ function doc_showVisitNotes() {
     </div>
   `;
 }
+
+function doc_home() {
+  loadDoctor();
+}
+
+function doctorAppointments() {
+  loadAppointmentsPage({
+    role: "doctor",
+    canCreate: false,
+    canEdit: true,
+    canCheckIn: false,
+    providerScope: "self",
+    allowScopeToggle: true
+  });
+}
+
+function doc_schedule() {
+  doc_showSchedule();
+}
+
+function doc_patients() {
+  doc_showPatients();
+}
+
+function doc_notes() {
+  doc_showVisitNotes();
+}

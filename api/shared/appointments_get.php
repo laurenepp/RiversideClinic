@@ -16,20 +16,15 @@ if (!in_array($userRole, $allowedRoles, true)) {
     exit;
 }
 
-$from = $_GET["from"] ?? "";
-$to   = $_GET["to"] ?? "";
-$providerId = (int)($_GET["providerId"] ?? 0);
+$appointmentId = (int)($_GET["appointmentId"] ?? 0);
 
-if ($from === "" || $to === "") {
+if ($appointmentId <= 0) {
     http_response_code(400);
-    echo json_encode(["error" => "from/to required (YYYY-MM-DD)"]);
+    echo json_encode(["error" => "appointmentId required"]);
     exit;
 }
 
-$fromDT = $from . " 00:00:00";
-$toDT   = $to   . " 23:59:59";
-
-$sql = "
+$stmt = $pdo->prepare("
   SELECT
     a.Appointment_ID,
     a.Scheduled_Start,
@@ -44,21 +39,20 @@ $sql = "
   FROM Appointment a
   JOIN Patient p ON a.Patient_ID = p.Patient_ID
   JOIN Users u ON a.Provider_User_ID = u.User_ID
-  WHERE a.Scheduled_Start BETWEEN ? AND ?
-";
+  WHERE a.Appointment_ID = ?
+  LIMIT 1
+");
 
-$params = [$fromDT, $toDT];
+$stmt->execute([$appointmentId]);
 
-if ($providerId > 0) {
-    $sql .= " AND a.Provider_User_ID = ? ";
-    $params[] = $providerId;
+$appointment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$appointment) {
+    http_response_code(404);
+    echo json_encode(["error" => "Appointment not found"]);
+    exit;
 }
 
-$sql .= " ORDER BY a.Scheduled_Start ASC";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-
 echo json_encode([
-  "appointments" => $stmt->fetchAll(PDO::FETCH_ASSOC)
+  "appointment" => $appointment
 ]);
