@@ -1,31 +1,9 @@
--- Clean MySQL schema (phpMyAdmin-friendly)
--- Generated 2026-03-01
-
 DROP DATABASE IF EXISTS riversideclinicdb;
 CREATE DATABASE riversideclinicdb;
 USE riversideclinicdb;
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS `Visit_Notes`;
-DROP TABLE IF EXISTS `Visit`;
-DROP TABLE IF EXISTS `Appointment`;
-DROP TABLE IF EXISTS `Provider_Schedule`;
-DROP TABLE IF EXISTS `Nurse_Assignments`;
-DROP TABLE IF EXISTS `Insurance_Info`;
-DROP TABLE IF EXISTS `Patient_Emergency_Contacts`;
-DROP TABLE IF EXISTS `Emergency_Contact`;
-DROP TABLE IF EXISTS `Audit_Log`;
-DROP TABLE IF EXISTS `User_Login_Info`;
-DROP TABLE IF EXISTS `Permissions`;
-DROP TABLE IF EXISTS `Patient`;
-DROP TABLE IF EXISTS `Users`;
-DROP TABLE IF EXISTS `Roles`;
-DROP TABLE IF EXISTS `VisitExam`;
-DROP TABLE IF EXISTS `VisitMedication`;
-
-SET FOREIGN_KEY_CHECKS = 1;
 
 -- =========================
 -- Core Access Control
@@ -75,6 +53,8 @@ CREATE TABLE `User_Login_Info` (
   `User_ID` BIGINT NOT NULL,
   `Username` VARCHAR(64) NOT NULL,
   `Password_Hash` VARCHAR(255) NOT NULL,
+  `Must_Change_Password` TINYINT(1) NOT NULL DEFAULT 1,
+  `Password_Changed_At` DATETIME NULL,
   `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`User_ID`),
   UNIQUE KEY `uk_User_Login_Info_Username` (`Username`),
@@ -161,7 +141,6 @@ CREATE TABLE `Appointment` (
   `Scheduled_Start` DATETIME NOT NULL,
   `Scheduled_End` DATETIME NOT NULL,
   `Status` VARCHAR(20) NOT NULL,
-  `Doctor_Case_Status` VARCHAR(20) NULL,
   PRIMARY KEY (`Appointment_ID`),
   KEY `idx_Appointment_Patient_ID` (`Patient_ID`),
   KEY `idx_Appointment_Provider_User_ID` (`Provider_User_ID`),
@@ -257,39 +236,3 @@ CREATE TABLE `Audit_Log` (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-/* NOTE:
-   One editable exam sheet per visit, including vitals and narrative notes.
-*/
-CREATE TABLE IF NOT EXISTS VisitExam (
-  Visit_ID INT NOT NULL,
-  Nurse_Intake_Note TEXT NULL,
-  Doctor_Exam_Note TEXT NULL,
-  Blood_Pressure VARCHAR(30) NULL,
-  Pulse VARCHAR(20) NULL,
-  Respiration VARCHAR(20) NULL,
-  Temperature VARCHAR(20) NULL,
-  Oxygen_Saturation VARCHAR(20) NULL,
-  Height VARCHAR(20) NULL,
-  Weight VARCHAR(20) NULL,
-  Pain_Level VARCHAR(20) NULL,
-  Updated_By_User_ID INT NULL,
-  Updated_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (Visit_ID),
-  CONSTRAINT fk_visitexam_visit
-    FOREIGN KEY (Visit_ID) REFERENCES Visit(Visit_ID),
-  CONSTRAINT fk_visitexam_user
-    FOREIGN KEY (Updated_By_User_ID) REFERENCES `User`(User_ID)
-);
-
-/* NOTE:
-    one editable medication list per visit, with freeform text for now.
-*/
-CREATE TABLE IF NOT EXISTS VisitMedication (
-  Visit_ID INT NOT NULL,
-  Current_Medications TEXT NULL,
-  Medication_Changes TEXT NULL,
-  Medication_Notes TEXT NULL,
-  Updated_By_User_ID INT NULL,
-  Updated_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (Visit_ID)
-);
