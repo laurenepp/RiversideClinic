@@ -78,6 +78,10 @@ async function start() {
 
     const role = normalizeRole(user.role);
     renderDashboardShell(role);
+
+    if (user.mustChangePassword) {
+      showFirstLoginPasswordModal();
+    }
   } catch (err) {
     showLogin();
   }
@@ -178,6 +182,118 @@ async function doLogin() {
   } catch (err) {
     alert("Invalid username or password");
     console.error("Login error:", err);
+  }
+}
+
+// -----------------------------
+// First-login modal
+// -----------------------------
+function isStrongPassword(password) {
+  return /^(?=.*[A-Z])(?=.*[a-z])(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
+}
+
+function showFirstLoginPasswordModal() {
+  const existing = document.getElementById("first-login-password-overlay");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "first-login-password-overlay";
+
+  overlay.innerHTML = `
+    <div class="fl-overlay">
+      <div class="fl-modal">
+        <h2 class="fl-title">Change Temporary Password</h2>
+        <p class="fl-subtext">
+          This is your first login. You must create a new password before continuing.
+        </p>
+
+        <div class="fl-form">
+          <label for="firstLoginNewPassword">New Password</label>
+          <input
+            id="firstLoginNewPassword"
+            type="password"
+            placeholder="Enter new password"
+            autocomplete="new-password"
+          >
+
+          <label for="firstLoginConfirmPassword">Confirm New Password</label>
+          <input
+            id="firstLoginConfirmPassword"
+            type="password"
+            placeholder="Confirm new password"
+            autocomplete="new-password"
+          >
+
+          <div class="fl-hint">
+            Password must be at least 8 characters and include:
+            1 uppercase letter, 1 lowercase letter, and 1 special character.
+          </div>
+
+          <div id="firstLoginPasswordMsg" class="fl-msg"></div>
+
+          <button
+            type="button"
+            onclick="submitFirstLoginPasswordChange()"
+            class="fl-btn"
+          >
+            Save New Password
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const newPasswordInput = document.getElementById("firstLoginNewPassword");
+  const confirmPasswordInput = document.getElementById("firstLoginConfirmPassword");
+
+  [newPasswordInput, confirmPasswordInput].forEach(input => {
+    input?.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitFirstLoginPasswordChange();
+      }
+    });
+  });
+}
+
+async function submitFirstLoginPasswordChange() {
+  const newPassword = document.getElementById("firstLoginNewPassword")?.value || "";
+  const confirmPassword = document.getElementById("firstLoginConfirmPassword")?.value || "";
+  const msg = document.getElementById("firstLoginPasswordMsg");
+
+  if (msg) msg.innerHTML = "";
+
+  if (!newPassword || !confirmPassword) {
+    if (msg) msg.innerHTML = "Required fields";
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    if (msg) msg.innerHTML = "Passwords do not match";
+    return;
+  }
+
+  if (!isStrongPassword(newPassword)) {
+    if (msg) msg.innerHTML = "Password must meet requirements";
+    return;
+  }
+
+  try {
+    await api("api/auth/change_password.php", "POST", {
+      newPassword,
+      confirmPassword
+    });
+
+    if (msg) msg.innerHTML = "Password updated";
+
+    setTimeout(() => {
+      document.getElementById("first-login-password-overlay")?.remove();
+      location.reload();
+    }, 500);
+  } catch (err) {
+    if (msg) msg.innerHTML = err?.error || err || "Unable to update password";
   }
 }
 
@@ -333,11 +449,6 @@ function admin_settings() {
 // -----------------------------
 // Doctor Views
 // -----------------------------
-
-/* NOTE:
-   This keeps the doctor landing page using the full doctor dashboard
-   from js/roles/doctor.js
-*/
 function doc_home() {
   if (typeof doc_showDashboard === "function") {
     doc_showDashboard();
@@ -355,10 +466,6 @@ function doc_home() {
   `);
 }
 
-/* NOTE:
-   This now sends the My Schedule tab to the doctor.js schedule page
-   instead of the old placeholder text
-*/
 function doc_schedule() {
   if (typeof doc_showSchedule === "function") {
     doc_showSchedule();
@@ -371,10 +478,6 @@ function doc_schedule() {
   `);
 }
 
-/* NOTE:
-   This now sends the Visit Notes tab to the doctor.js visit notes page
-   instead of the old placeholder text
-*/
 function doc_notes() {
   if (typeof doc_showVisitNotes === "function") {
     doc_showVisitNotes();
@@ -387,10 +490,6 @@ function doc_notes() {
   `);
 }
 
-/* NOTE:
-   This now sends the Patients tab to the doctor.js patients page
-   instead of the old placeholder text
-*/
 function doc_patients() {
   if (typeof doc_showPatients === "function") {
     doc_showPatients();
@@ -499,6 +598,7 @@ function rx_checkin() {
     <p>Front desk check-in workflow is not available right now.</p>
   `);
 }
+
 // -----------------------------
 // Start app
 // -----------------------------

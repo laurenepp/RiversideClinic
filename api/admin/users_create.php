@@ -83,18 +83,20 @@ try {
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
     $stmt = $pdo->prepare("
-        INSERT INTO User_Login_Info (
-            User_ID,
-            Username,
-            Password_Hash
-        )
-        VALUES (?, ?, ?)
-    ");
-    $stmt->execute([
-        $newUserId,
-        $username,
-        $hash
-    ]);
+    INSERT INTO User_Login_Info (
+        User_ID,
+        Username,
+        Password_Hash,
+        Must_Change_Password,
+        Password_Changed_At
+    )
+    VALUES (?, ?, ?, 1, NULL)
+");
+$stmt->execute([
+    $newUserId,
+    $username,
+    $hash
+]);
 
     $pdo->commit();
 

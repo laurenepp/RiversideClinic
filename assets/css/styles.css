@@ -1712,3 +1712,138 @@ details[open] summary::before {
   border-top: 1px solid #e5e5e5;
   background: #fafafa;
 }
+
+/* =========================
+   First Login Password Modal Overrides
+   ========================= */
+
+/* All text inside modal */
+#first-login-password-overlay {
+  color: #1d4ed8;
+  font-family: inherit;
+}
+
+/* Headings */
+#first-login-password-overlay h2 {
+  color: #1d4ed8;
+}
+
+/* Labels */
+#first-login-password-overlay label {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Inputs */
+#first-login-password-overlay input {
+  border: 1px solid #dbeafe;
+  outline: none;
+}
+
+#first-login-password-overlay input:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+/* Button */
+#first-login-password-overlay button {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #1d4ed8;
+  transition: 0.2s ease;
+}
+
+/* Button hover */
+#first-login-password-overlay button:hover {
+  background-color: #bfdbfe;
+}
+
+/* Messages */
+#firstLoginPasswordMsg {
+  font-weight: 600;
+}
+
+/* =========================
+   First Login Modal
+   ========================= */
+
+.fl-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.fl-modal {
+  width: 460px;
+  max-width: 92%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+  color: #1d4ed8;
+}
+
+.fl-title {
+  margin: 0 0 10px;
+  color: #1d4ed8;
+}
+
+.fl-subtext {
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.fl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fl-form label {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.fl-form input {
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  outline: none;
+}
+
+.fl-form input:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+}
+
+.fl-hint {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #1d4ed8;
+}
+
+.fl-msg {
+  min-height: 22px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.fl-btn {
+  margin-top: 6px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.fl-btn:hover {
+  background: #bfdbfe;
+}

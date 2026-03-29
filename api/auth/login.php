@@ -32,7 +32,8 @@ $stmt = $pdo->prepare("
         u.Last_Name,
         u.Is_Disabled,
         r.Role_Name,
-        li.Password_Hash
+        li.Password_Hash,
+        li.Must_Change_Password
     FROM users u
     JOIN user_login_info li
         ON u.User_ID = li.User_ID
@@ -64,7 +65,8 @@ if ((int)$user['Is_Disabled'] === 1) {
 $_SESSION['user'] = [
     "id" => (int)$user['User_ID'],
     "name" => trim(($user['First_Name'] ?? '') . ' ' . ($user['Last_Name'] ?? '')),
-    "role" => $user['Role_Name']
+    "role" => $user['Role_Name'],
+    "mustChangePassword" => ((int)$user['Must_Change_Password'] === 1)
 ];
 
 echo json_encode($_SESSION['user']);
