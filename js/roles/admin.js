@@ -160,9 +160,7 @@ function admin_showUsers() {
   admin_loadUsers();
 }
 
-
 function admin_loadUsers() {
-  // Only create mock data once
   if (!window.adminUsersData || !Array.isArray(window.adminUsersData) || !window.adminUsersData.length) {
     window.adminUsersData = [
       {
@@ -210,46 +208,11 @@ function admin_loadUsers() {
         Is_Disabled: 0,
         Last_Login_At: "-"
       }
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch users");
-    }
-
-    const data = await res.json();
-    adminUsersData = Array.isArray(data) ? data : [];
-
-    admin_refreshUsersUI();
-  } catch (err) {
-    console.error(err);
-    adminUsersData = [];
-
-    const stats = document.getElementById("adminUsersStats");
-    if (stats) {
-      stats.innerHTML = "Total Users: 0 | Active: 0 | Locked: 0";
-    }
-
-    if (usersWrap) {
-      usersWrap.innerHTML = `
-        <table class="admin-users-table">
-          <thead>
-            <tr>
-              <th>USER</th>
-              <th>ROLE</th>
-              <th>STATUS</th>
-              <th>LAST LOGIN</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="5">Unable to load users from the database.</td>
-            </tr>
-          </tbody>
-        </table>
-      `;
-    }
+    ];
   }
+
+  adminUsersData = window.adminUsersData;
+  admin_refreshUsersUI();
 }
 
 function admin_refreshUsersUI() {
@@ -464,11 +427,9 @@ async function admin_createUser() {
 
     msg.innerHTML = `<span style="color:green;">User created successfully</span>`;
 
-    // reload user list after create
     setTimeout(() => {
       admin_showUsers();
     }, 800);
-
   } catch (err) {
     console.error(err);
     msg.innerHTML = `<span style="color:red;">${err.message}</span>`;
