@@ -44,7 +44,7 @@ $stmt = $pdo->prepare("
     a.Scheduled_Start,
     a.Scheduled_End,
     a.Status,
-    a.Doctor_Case_Status,
+    v.Doctor_Case_Status,
     p.First_Name AS Patient_First,
     p.Last_Name AS Patient_Last,
     p.Date_Of_Birth,
@@ -52,7 +52,11 @@ $stmt = $pdo->prepare("
     p.Phone_Number,
     p.Email
   FROM Appointment a
-  JOIN Patient p ON a.Patient_ID = p.Patient_ID
+  JOIN Patient p
+    ON a.Patient_ID = p.Patient_ID
+  LEFT JOIN Visit v
+    ON v.Appointment_ID = a.Appointment_ID
+   AND v.Provider_User_ID = a.Provider_User_ID
   WHERE a.Appointment_ID = ?
     AND a.Provider_User_ID = ?
   LIMIT 1

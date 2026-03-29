@@ -157,10 +157,14 @@ function docCaseStatusText(a) {
   const caseStatus = String(a?.Doctor_Case_Status ?? "").toUpperCase();
   const apptStatus = String(a?.Status ?? "").toUpperCase();
 
-  if (caseStatus === "FINISHED") return "Finished";
-  if (caseStatus === "IN_PROGRESS") return "In Progress";
+  /* NOTE:
+     Display doctor workflow as Open / Closed
+     while backend still uses IN_PROGRESS / FINISHED
+  */
+  if (caseStatus === "IN_PROGRESS") return "Open";
+  if (caseStatus === "FINISHED") return "Closed";
   if (apptStatus === "CHECKED_IN") return "Open";
-  return "Not Open";
+  return "Closed";
 }
 
 function docCaseStatusBadge(caseText) {
@@ -169,13 +173,12 @@ function docCaseStatusBadge(caseText) {
   if (t === "OPEN") {
     return `<span class="badge" style="background: rgba(11, 114, 133, 0.12); color: var(--teal-dark); border: 1px solid var(--border);">Open</span>`;
   }
-  if (t === "IN PROGRESS") {
-    return `<span class="badge">In Progress</span>`;
+
+  if (t === "CLOSED") {
+    return `<span class="badge">Closed</span>`;
   }
-  if (t === "FINISHED") {
-    return `<span class="badge">Finished</span>`;
-  }
-  return `<span class="badge">${escapeHtml(caseText || "Not Open")}</span>`;
+
+  return `<span class="badge">${escapeHtml(caseText || "Closed")}</span>`;
 }
 
 /* NOTE:
@@ -817,8 +820,8 @@ function doc_renderPatientChart() {
             <span class="${badgeClass(a.Status)}">${escapeHtml(a.Status ?? "")}</span>
             ${docCaseStatusBadge(docCaseStatusText(a))}
             <button class="ghost" onclick="doc_chartBack()">Back</button>
-            <button class="secondary" onclick="doc_setStatus(${appointmentId}, 'IN_PROGRESS')">In Progress</button>
-            <button class="primary" onclick="doc_setStatus(${appointmentId}, 'COMPLETED')">Finished</button>
+            <button class="secondary" onclick="doc_setStatus(${appointmentId}, 'IN_PROGRESS')">Open</button>
+            <button class="primary" onclick="doc_setStatus(${appointmentId}, 'COMPLETED')">Close</button>
           </div>
         </div>
 
@@ -1290,8 +1293,8 @@ async function doc_open(appointmentId) {
         <!-- NOTE:
              Keep doctor workflow buttons available from the preview card.
         -->
-        <button class="secondary" onclick="doc_setStatus(${appointmentId}, 'IN_PROGRESS')">In Progress</button>
-        <button class="primary" onclick="doc_setStatus(${appointmentId}, 'COMPLETED')">Finished</button>
+        <button class="secondary" onclick="doc_setStatus(${appointmentId}, 'IN_PROGRESS')">Open</button>
+        <button class="primary" onclick="doc_setStatus(${appointmentId}, 'COMPLETED')">Close</button>
       </div>
     </div>
   `;
@@ -1372,15 +1375,14 @@ async function doc_setStatus(appointmentId, status) {
 
   if (typeof doc_loadTilesAndQueue === "function") await doc_loadTilesAndQueue();
 
-  /* NOTE:
-     If the doctor is in the full chart, reopen that chart so the badge refreshes.
-     Otherwise refresh the schedule preview view.
-  */
-  const onFullChart = typeof doc_chartState !== "undefined"
-    && Number(doc_chartState.appointmentId) === Number(appointmentId)
-    && !!document.getElementById("content");
+  const fullChartVisible =
+    !!document.querySelector('button[onclick^="doc_switchChartTab("]');
 
-  if (onFullChart && typeof doc_openPatientChart === "function") {
+  const sameChartAppointment =
+    typeof doc_chartState !== "undefined" &&
+    Number(doc_chartState.appointmentId) === Number(appointmentId);
+
+  if (fullChartVisible && sameChartAppointment && typeof doc_openPatientChart === "function") {
     await doc_openPatientChart(appointmentId, doc_chartState.returnTo || "patients");
     return;
   }

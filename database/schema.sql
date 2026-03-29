@@ -156,7 +156,7 @@ CREATE TABLE `Appointment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================
--- Visits + Notes
+-- Visits + Notes (Extended for Doctor Workflow)
 -- =========================
 
 CREATE TABLE `Visit` (
@@ -166,6 +166,22 @@ CREATE TABLE `Visit` (
   `Patient_ID` BIGINT NOT NULL,
   `Provider_User_ID` BIGINT NOT NULL,
   `Visit_DateTime` DATETIME NOT NULL,
+  /*
+    BRANCH DIFFERENCE:
+    Added Doctor_Case_Status to track doctor-facing workflow state.
+
+    DIFFERENCE FROM MAIN:
+    Main does not track doctor workflow state separately.
+    This allows tracking states such as:
+      - Open
+      - In Progress
+      - Completed
+
+    DESIGN NOTE:
+    This is attached to Visit instead of Appointment to keep
+    scheduling separate from clinical workflow.
+  */
+  `Doctor_Case_Status` VARCHAR(20) NULL,
   PRIMARY KEY (`Visit_ID`),
   KEY `idx_Visit_Created_By_User_ID` (`Created_By_User_ID`),
   KEY `idx_Visit_Appointment_ID` (`Appointment_ID`),
@@ -200,6 +216,58 @@ CREATE TABLE `Visit_Notes` (
   CONSTRAINT `fk_Visit_Notes_Created_By_User`
     FOREIGN KEY (`Created_By_User_ID`) REFERENCES `Users` (`User_ID`)
     ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+/*
+  BRANCH DIFFERENCE:
+  Structured exam/vitals per visit.
+*/
+CREATE TABLE `VisitExam` (
+  `Visit_ID` BIGINT NOT NULL,
+  `Nurse_Intake_Note` TEXT NULL,
+  `Doctor_Exam_Note` TEXT NULL,
+  `Blood_Pressure` VARCHAR(30) NULL,
+  `Pulse` VARCHAR(20) NULL,
+  `Respiration` VARCHAR(20) NULL,
+  `Temperature` VARCHAR(20) NULL,
+  `Oxygen_Saturation` VARCHAR(20) NULL,
+  `Height` VARCHAR(20) NULL,
+  `Weight` VARCHAR(20) NULL,
+  `Pain_Level` VARCHAR(20) NULL,
+  `Updated_By_User_ID` BIGINT NULL,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Visit_ID`),
+  KEY `idx_VisitExam_Updated_By_User_ID` (`Updated_By_User_ID`),
+  CONSTRAINT `fk_VisitExam_Visit`
+    FOREIGN KEY (`Visit_ID`) REFERENCES `Visit` (`Visit_ID`)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `fk_VisitExam_Updated_By_User`
+    FOREIGN KEY (`Updated_By_User_ID`) REFERENCES `Users` (`User_ID`)
+    ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+/*
+  BRANCH DIFFERENCE:
+  Structured medication tracking per visit.
+*/
+CREATE TABLE `VisitMedication` (
+  `Visit_ID` BIGINT NOT NULL,
+  `Current_Medications` TEXT NULL,
+  `Medication_Changes` TEXT NULL,
+  `Medication_Notes` TEXT NULL,
+  `Updated_By_User_ID` BIGINT NULL,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Visit_ID`),
+  KEY `idx_VisitMedication_Updated_By_User_ID` (`Updated_By_User_ID`),
+  CONSTRAINT `fk_VisitMedication_Visit`
+    FOREIGN KEY (`Visit_ID`) REFERENCES `Visit` (`Visit_ID`)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `fk_VisitMedication_Updated_By_User`
+    FOREIGN KEY (`Updated_By_User_ID`) REFERENCES `Users` (`User_ID`)
+    ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================
