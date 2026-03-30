@@ -1847,3 +1847,49 @@ details[open] summary::before {
 .fl-btn:hover {
   background: #bfdbfe;
 }
+
+.appt-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.appt-week-col {
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.appt-week-head {
+  padding: 14px;
+  font-weight: 700;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.appt-week-body {
+  padding: 12px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.appt-week-card {
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.appt-week-card.green {
+  background: #dff3e4;
+}
+
+.appt-week-card.blue {
+  background: #dfeafe;
+}
+
+.appt-week-card.gray {
+  background: #ececec;
+}

@@ -1,15 +1,16 @@
 let appointmentsState = {
-    role: "",
-    canCreate: false,
-    canEdit: false,
-    canCheckIn: false,
-    providerScope: "all",
-    providerId: null,
-    selectedDate: new Date(),
-    providers: [],
-    appointments: [],
-    selectedPatient: null,
-    patientSearchResults: []
+  role: "",
+  canCreate: false,
+  canEdit: false,
+  canCheckIn: false,
+  providerScope: "all",
+  providerId: null,
+  selectedDate: new Date(),
+  viewMode: "day",
+  providers: [],
+  appointments: [],
+  selectedPatient: null,
+  patientSearchResults: []
 };
 
 function loadAppointmentsPage(options = {}) {
@@ -35,45 +36,61 @@ function loadAppointmentsPage(options = {}) {
 }
 
 function renderAppointmentsPage() {
-    const mount = document.getElementById("appointments_page");
-    if (!mount) return;
+  const mount = document.getElementById("appointments_page");
+  if (!mount) return;
 
-    const prettyDate = formatAppointmentsLongDate(appointmentsState.selectedDate);
+  const prettyDate =
+    appointmentsState.viewMode === "week"
+      ? formatAppointmentsWeekRange(appointmentsState.selectedDate)
+      : formatAppointmentsLongDate(appointmentsState.selectedDate);
 
-    mount.innerHTML = `
-        <div class="appt-shell">
-        <div class="appt-page-header">
-            <div>
-            <h2>Appointments</h2>
-            <div class="appt-subdate">${prettyDate}</div>
-            </div>
+  mount.innerHTML = `
+    <div class="appt-shell">
+      <div class="appt-page-header">
+        <div>
+          <h2>Appointments</h2>
+          <div class="appt-subdate">${prettyDate}</div>
         </div>
+      </div>
 
-        <div class="appt-toolbar">
-            <div class="appt-toolbar-left">
-                <button class="ghost appt-nav-btn" onclick="appointmentsPrevDay()">&#8249;</button>
-                <div class="appt-date-pill">${prettyDate}</div>
-                <button class="ghost appt-nav-btn" onclick="appointmentsNextDay()">&#8250;</button>
-                <button class="ghost" onclick="appointmentsToday()">Today</button>
-            </div>
+      <div class="appt-toolbar">
+        <div class="appt-toolbar-left">
+          <button class="ghost appt-nav-btn" onclick="appointmentsPrevPeriod()">&#8249;</button>
+          <div class="appt-date-pill">${prettyDate}</div>
+          <button class="ghost appt-nav-btn" onclick="appointmentsNextPeriod()">&#8250;</button>
+          <button class="ghost" onclick="appointmentsToday()">Today</button>
+        </div>
 
         <div class="appt-toolbar-right">
+          ${appointmentsState.allowScopeToggle ? `
             <div class="appt-view-toggle">
-                <button class="primary">Day</button>
-                <button class="ghost" onclick="toast('Coming Soon', 'Week view is not built yet.', 'err')">Week</button>
+              <button class="${appointmentsState.providerScope === 'self' ? 'primary' : 'ghost'}" onclick="appointmentsSetScope('self')">My Calendar</button>
+              <button class="${appointmentsState.providerScope === 'all' ? 'primary' : 'ghost'}" onclick="appointmentsSetScope('all')">All Providers</button>
             </div>
+          ` : ""}
 
-            ${appointmentsState.canCreate ? `
-                <button class="primary" onclick="appointmentsOpenNew()">+ New Appointment</button>
-            ` : ""}
-            </div>
-        </div>
+          <div class="appt-view-toggle">
+            <button class="${appointmentsState.viewMode === 'day' ? 'primary' : 'ghost'}" onclick="appointmentsSetView('day')">Day</button>
+            <button class="${appointmentsState.viewMode === 'week' ? 'primary' : 'ghost'}" onclick="appointmentsSetView('week')">Week</button>
+          </div>
 
-        <div id="appointments_scheduler">
-            <div style="padding:16px;">Loading appointments...</div>
-            </div>
+          ${appointmentsState.canCreate ? `
+            <button class="primary" onclick="appointmentsOpenNew()">+ New Appointment</button>
+          ` : ""}
         </div>
-    `;
+      </div>
+
+      <div id="appointments_scheduler">
+        <div style="padding:16px;">Loading appointments...</div>
+      </div>
+    </div>
+  `;
+}
+
+function appointmentsSetView(mode) {
+  appointmentsState.viewMode = mode;
+  renderAppointmentsPage();
+  appointmentsLoadData();
 }
 
 function formatAppointmentsLongDate(dateObj) {
@@ -124,25 +141,45 @@ function appointmentsToday() {
 }
 
 async function appointmentsLoadData() {
-    try {
-        const day = formatAppointmentsDateInput(appointmentsState.selectedDate);
+  try {
+    let fromDate;
+    let toDate;
 
-        const [providersRes, appointmentsRes] = await Promise.all([
-        api("api/shared/providers_list.php"),
-        api(`api/shared/appointments_list.php?from=${encodeURIComponent(day)}&to=${encodeURIComponent(day)}`)
+    if (appointmentsState.viewMode === "week") {
+      fromDate = formatAppointmentsDateInput(getStartOfWeek(appointmentsState.selectedDate));
+      toDate = formatAppointmentsDateInput(getEndOfWeek(appointmentsState.selectedDate));
+    } else {
+      const day = formatAppointmentsDateInput(appointmentsState.selectedDate);
+      fromDate = day;
+      toDate = day;
+    }
+
+    let appointmentsUrl = `api/shared/appointments_list.php?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`;
+
+    if (appointmentsState.providerScope === "self" && appointmentsState.providerId) {
+      appointmentsUrl += `&providerId=${encodeURIComponent(appointmentsState.providerId)}`;
+    }
+
+    const [providersRes, appointmentsRes] = await Promise.all([
+      api("api/shared/providers_list.php"),
+      api(appointmentsUrl)
     ]);
 
-        appointmentsState.providers = providersRes.providers || [];
-        appointmentsState.appointments = appointmentsRes.appointments || [];
+    appointmentsState.providers = providersRes.providers || [];
+    appointmentsState.appointments = appointmentsRes.appointments || [];
 
-        renderAppointmentsDayGrid();
-    } catch (err) {
-        const scheduler = document.getElementById("appointments_scheduler");
-        if (scheduler) {
-        scheduler.innerHTML = `<div class="err" style="padding:16px;">Failed to load appointments.</div>`;
+    if (appointmentsState.viewMode === "week") {
+      renderAppointmentsWeekGrid();
+    } else {
+      renderAppointmentsDayGrid();
+    }
+  } catch (err) {
+    const scheduler = document.getElementById("appointments_scheduler");
+    if (scheduler) {
+      scheduler.innerHTML = `<div class="err" style="padding:16px;">Failed to load appointments.</div>`;
     }
     throw err;
-    }
+  }
 }
 
 function appointmentsGetVisibleProviders() {
@@ -270,7 +307,7 @@ function appointmentsView(appointmentId) {
 
             <div class="field">
               <label>Start</label>
-              <input id="appt_edit_start" type="datetime-local" value="${appointmentsToDateTimeLocal(appt.Scheduled_Start)}">
+              <input id="appt_edit_start" type="datetime-local" value="${appointmentsToDateTimeLocal(appt.Scheduled_Start)}" onchange="appointmentsSyncEditEndTime()">
             </div>
 
             <div class="field">
@@ -303,7 +340,26 @@ function appointmentsView(appointmentId) {
   `;
 }
 
+function appointmentsSyncEditEndTime() {
+  const startInput = document.getElementById("appt_edit_start");
+  const endInput = document.getElementById("appt_edit_end");
 
+  if (!startInput || !endInput || !startInput.value) return;
+
+  const start = new Date(startInput.value);
+  if (isNaN(start.getTime())) return;
+
+  const end = new Date(start);
+  end.setMinutes(end.getMinutes() + 30);
+
+  const year = end.getFullYear();
+  const month = String(end.getMonth() + 1).padStart(2, "0");
+  const day = String(end.getDate()).padStart(2, "0");
+  const hours = String(end.getHours()).padStart(2, "0");
+  const mins = String(end.getMinutes()).padStart(2, "0");
+
+  endInput.value = `${year}-${month}-${day}T${hours}:${mins}`;
+}
 
 function appointmentsCloseModal() {
   const modalRoot = document.getElementById("appt_modal_root");
@@ -343,10 +399,18 @@ async function appointmentsSave(appointmentId) {
     toast("Success", "Appointment updated successfully.", "ok");
     await appointmentsLoadData();
     appointmentsCloseModal();
-  } catch (err) {
+    } catch (err) {
+      const open = err.clinicOpen?.slice(0,5) || "?";
+      const close = err.clinicClose?.slice(0,5) || "?";
+      const errorMessage =
+      err?.error === "Appointment is outside clinic hours"
+        ? `Allowed hours are ${open} to ${close}.`
+        : (err?.error || "Failed to update appointment.");
     if (msg) {
-      msg.innerHTML = `<div class="err">Failed to update appointment.</div>`;
+      msg.innerHTML = `<div class="err">${errorMessage}</div>`;
     }
+
+    toast("Error", errorMessage, "err");
     throw err;
   }
 }
@@ -401,7 +465,7 @@ function appointmentsOpenNew() {
 
         <div class="field">
           <label>Start</label>
-          <input id="appt_start" type="datetime-local" value="${defaultDate}T09:00">
+          <input id="appt_start" type="datetime-local" value="${defaultDate}T09:00" onchange="appointmentsSyncEndTime()">
         </div>
 
         <div class="field">
@@ -417,6 +481,27 @@ function appointmentsOpenNew() {
       <div id="appt_msg" style="margin-top:12px;"></div>
     </div>
   `;
+}
+
+function appointmentsSyncEndTime() {
+  const startInput = document.getElementById("appt_start");
+  const endInput = document.getElementById("appt_end");
+
+  if (!startInput || !endInput || !startInput.value) return;
+
+  const start = new Date(startInput.value);
+  if (isNaN(start.getTime())) return;
+
+  const end = new Date(start);
+  end.setMinutes(end.getMinutes() + 30);
+
+  const year = end.getFullYear();
+  const month = String(end.getMonth() + 1).padStart(2, "0");
+  const day = String(end.getDate()).padStart(2, "0");
+  const hours = String(end.getHours()).padStart(2, "0");
+  const mins = String(end.getMinutes()).padStart(2, "0");
+
+  endInput.value = `${year}-${month}-${day}T${hours}:${mins}`;
 }
 
 function appointmentsHandlePatientSearchKey(event) {
@@ -553,12 +638,24 @@ async function appointmentsCreate() {
     toast("Success", "Appointment created successfully.", "ok");
     appointmentsState.selectedPatient = null;
     await appointmentsLoadData();
-  } catch (err) {
-    if (msg) {
-      msg.innerHTML = `<div class="err">Failed to create appointment.</div>`;
+    } catch (err) {
+      let errorMessage = err?.error || "Failed to create appointment.";
+
+      if (err?.error === "Appointment is outside clinic hours") {
+        errorMessage = `Appointment is outside clinic hours. Clinic hours: ${err.clinicOpen?.slice(0,5) || "?"} - ${err.clinicClose?.slice(0,5) || "?"}`;
+      } else if (err?.error === "Provider is not scheduled to work on that day") {
+        errorMessage = "That provider is not scheduled to work on that day.";
+      } else if (err?.error === "Appointment is outside provider schedule") {
+        errorMessage = "That appointment falls outside the selected provider's schedule.";
+      }
+
+      if (msg) {
+        msg.innerHTML = `<div class="err">${errorMessage}</div>`;
+      }
+
+      toast("Error", errorMessage, "err");
+      throw err;
     }
-    throw err;
-  }
 }
 
 async function appointmentsCancel(appointmentId) {
@@ -583,4 +680,143 @@ async function appointmentsCancel(appointmentId) {
     }
     throw err;
   }
+}
+
+/* WEEK VIEW HELPER FUNCTION */
+
+function appointmentsSetScope(scope) {
+  appointmentsState.providerScope = scope;
+  renderAppointmentsPage();
+  appointmentsLoadData();
+}
+
+function appointmentsPrevPeriod() {
+  const d = new Date(appointmentsState.selectedDate);
+
+  if (appointmentsState.viewMode === "week") {
+    d.setDate(d.getDate() - 7);
+  } else {
+    d.setDate(d.getDate() - 1);
+  }
+
+  appointmentsState.selectedDate = d;
+  renderAppointmentsPage();
+  appointmentsLoadData();
+}
+
+function appointmentsNextPeriod() {
+  const d = new Date(appointmentsState.selectedDate);
+
+  if (appointmentsState.viewMode === "week") {
+    d.setDate(d.getDate() + 7);
+  } else {
+    d.setDate(d.getDate() + 1);
+  }
+
+  appointmentsState.selectedDate = d;
+  renderAppointmentsPage();
+  appointmentsLoadData();
+}
+
+function getStartOfWeek(dateObj) {
+  const d = new Date(dateObj);
+  const day = d.getDay(); // 0=Sunday
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getEndOfWeek(dateObj) {
+  const start = getStartOfWeek(dateObj);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+function formatAppointmentsWeekRange(dateObj) {
+  const start = getStartOfWeek(dateObj);
+  const end = getEndOfWeek(dateObj);
+
+  const startText = start.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric"
+  });
+
+  const endText = end.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+
+  return `${startText} - ${endText}`;
+}
+
+function renderAppointmentsWeekGrid() {
+  const scheduler = document.getElementById("appointments_scheduler");
+  if (!scheduler) return;
+
+  const start = getStartOfWeek(appointmentsState.selectedDate);
+  const days = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    days.push(d);
+  }
+
+  const appointments = appointmentsState.appointments || [];
+
+  scheduler.innerHTML = `
+    <div class="appt-week-grid">
+      ${days.map(d => `
+        <div class="appt-week-col">
+          <div class="appt-week-head">
+            <div>${d.toLocaleDateString("en-US", { weekday: "short" })}</div>
+            <div>${d.toLocaleDateString("en-US", { month: "numeric", day: "numeric" })}</div>
+          </div>
+          <div class="appt-week-body">
+            ${renderAppointmentsForDay(d, appointments)}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderAppointmentsForDay(dayObj, appointments) {
+  const dayStr = formatAppointmentsDateInput(dayObj);
+
+  const dayAppointments = appointments
+    .filter(a => {
+      const apptDate = formatAppointmentsDateInput(
+        new Date(String(a.Scheduled_Start).replace(" ", "T"))
+      );
+      return apptDate === dayStr;
+    })
+    .sort((a, b) =>
+      new Date(String(a.Scheduled_Start).replace(" ", "T")) -
+      new Date(String(b.Scheduled_Start).replace(" ", "T"))
+    );
+
+  if (!dayAppointments.length) {
+    return `<div class="hint">No appointments</div>`;
+  }
+
+  return dayAppointments.map(appt => {
+    const patientName = `${appt.Patient_First} ${appt.Patient_Last}`;
+    const providerName = `${appt.Provider_First} ${appt.Provider_Last}`;
+    const tone = appointmentsTone(appt.Status);
+    const start = appointmentsFormatTimeLabel(appt.Scheduled_Start);
+    const end = appointmentsFormatTimeLabel(appt.Scheduled_End);
+
+    return `
+      <div class="appt-week-card ${tone}" onclick="appointmentsView(${appt.Appointment_ID})">
+        <div class="appt-patient">${patientName}</div>
+        <div class="appt-type">${start} - ${end}</div>
+        ${appointmentsState.providerScope === "all" ? `<div class="appt-duration">Dr. ${providerName}</div>` : ""}
+        <div class="appt-duration">${appt.Status}</div>
+      </div>
+    `;
+  }).join("");
 }

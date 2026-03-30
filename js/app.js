@@ -393,30 +393,6 @@ function admin_users() {
   `);
 }
 
-function admin_appointments() {
-  setView(`
-    <div class="page-header">
-      <h2>Appointments</h2>
-      <p>View and manage clinic scheduling.</p>
-    </div>
-    <div class="admin-panel-box">
-      <p>Appointments page coming soon.</p>
-    </div>
-  `);
-}
-
-function admin_staff() {
-  setView(`
-    <div class="page-header">
-      <h2>Staff</h2>
-      <p>Manage clinic staff and role assignments.</p>
-    </div>
-    <div class="admin-panel-box">
-      <p>Staff management page coming soon.</p>
-    </div>
-  `);
-}
-
 function admin_reports() {
   if (typeof admin_showReports === "function") {
     admin_showReports();
@@ -505,17 +481,6 @@ function doc_patients() {
 // -----------------------------
 // Nurse Views
 // -----------------------------
-function nurse_home() {
-  if (typeof loadNurse === "function") {
-    loadNurse();
-    return;
-  }
-
-  setView(`
-    <h2>Nurse Dashboard</h2>
-    <p>TODO: Vitals + rooming workflow.</p>
-  `);
-}
 
 function nurse_patients() {
   setView(`

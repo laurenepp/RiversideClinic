@@ -814,7 +814,7 @@ function admin_escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function adminAppointments() {
+function admin_appointments() {
   loadAppointmentsPage({
     role: "admin",
     canCreate: true,
@@ -823,4 +823,316 @@ function adminAppointments() {
     providerScope: "all",
     allowScopeToggle: false
   });
+}
+
+function admin_clinicHours() {
+  setView(`
+    <div class="page-header">
+      <h2>Clinic Hours</h2>
+      <p>Set the clinic's weekly opening and closing hours.</p>
+    </div>
+
+    <div class="admin-panel-box">
+      <div id="clinic_hours_wrap">Loading clinic hours...</div>
+
+      <div class="row" style="margin-top:16px;">
+        <button class="primary" onclick="admin_saveClinicHours()">Save Clinic Hours</button>
+      </div>
+
+      <div id="clinic_hours_msg" style="margin-top:12px;"></div>
+    </div>
+  `);
+
+  admin_loadClinicHours();
+}
+
+async function admin_loadClinicHours() {
+  const wrap = document.getElementById("clinic_hours_wrap");
+  if (!wrap) return;
+
+  try {
+    const data = await api("api/admin/clinic_hours_get.php");
+    const hours = data.hours || [];
+
+    const dayNames = {
+      1: "Sunday",
+      2: "Monday",
+      3: "Tuesday",
+      4: "Wednesday",
+      5: "Thursday",
+      6: "Friday",
+      7: "Saturday"
+    };
+
+    const rows = [1,2,3,4,5,6,7].map(day => {
+      const row = hours.find(h => Number(h.Day_Of_Week) === day) || {
+        Day_Of_Week: day,
+        Is_Open: 0,
+        Open_Time: "",
+        Close_Time: ""
+      };
+
+      const openTime = row.Open_Time ? String(row.Open_Time).slice(0,5) : "";
+      const closeTime = row.Close_Time ? String(row.Close_Time).slice(0,5) : "";
+      const isOpen = Number(row.Is_Open) === 1;
+
+      return `
+        <tr>
+          <td>${dayNames[day]}</td>
+          <td>
+            <input type="checkbox" id="ch_open_${day}" ${isOpen ? "checked" : ""} onchange="admin_toggleClinicDay(${day})">
+          </td>
+          <td>
+            <input type="time" id="ch_start_${day}" value="${openTime}" ${isOpen ? "" : "disabled"}>
+          </td>
+          <td>
+            <input type="time" id="ch_end_${day}" value="${closeTime}" ${isOpen ? "" : "disabled"}>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Open</th>
+            <th>Open Time</th>
+            <th>Close Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    wrap.innerHTML = `<div class="err">Failed to load clinic hours.</div>`;
+    throw err;
+  }
+}
+
+function admin_toggleClinicDay(day) {
+  const isOpen = document.getElementById(`ch_open_${day}`)?.checked;
+  const start = document.getElementById(`ch_start_${day}`);
+  const end = document.getElementById(`ch_end_${day}`);
+
+  if (start) start.disabled = !isOpen;
+  if (end) end.disabled = !isOpen;
+
+  if (!isOpen) {
+    if (start) start.value = "";
+    if (end) end.value = "";
+  }
+}
+
+async function admin_saveClinicHours() {
+  const payload = {
+    hours: [1,2,3,4,5,6,7].map(day => ({
+      dayOfWeek: day,
+      isOpen: !!document.getElementById(`ch_open_${day}`)?.checked,
+      openTime: document.getElementById(`ch_start_${day}`)?.value || "",
+      closeTime: document.getElementById(`ch_end_${day}`)?.value || ""
+    }))
+  };
+
+  const msg = document.getElementById("clinic_hours_msg");
+  if (msg) msg.innerHTML = "Saving clinic hours...";
+
+  try {
+    await api("api/admin/clinic_hours_save.php", "POST", payload);
+
+    if (msg) {
+      msg.innerHTML = `<div class="ok">Clinic hours saved successfully.</div>`;
+    }
+
+    toast("Success", "Clinic hours saved successfully.", "ok");
+  } catch (err) {
+    if (msg) {
+      msg.innerHTML = `<div class="err">Failed to save clinic hours.</div>`;
+    }
+    throw err;
+  }
+}
+
+function admin_staff() {
+  setView(`
+    <div class="page-header">
+      <h2>Staff Scheduling</h2>
+      <p>Manage weekly provider schedules.</p>
+    </div>
+
+    <div class="admin-panel-box">
+      <div class="form-grid">
+        <div class="field">
+          <label>Provider</label>
+          <select id="sched_provider"></select>
+        </div>
+
+        <div class="field">
+          <label>Day</label>
+          <select id="sched_day">
+            <option value="1">Sunday</option>
+            <option value="2">Monday</option>
+            <option value="3">Tuesday</option>
+            <option value="4">Wednesday</option>
+            <option value="5">Thursday</option>
+            <option value="6">Friday</option>
+            <option value="7">Saturday</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Start Time</label>
+          <input id="sched_start" type="time">
+        </div>
+
+        <div class="field">
+          <label>End Time</label>
+          <input id="sched_end" type="time">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <button class="primary" onclick="admin_saveSchedule()">Add Schedule Block</button>
+      </div>
+
+      <div id="sched_msg" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="admin-panel-box" style="margin-top:18px;">
+      <div class="section-title">
+        <h3>Current Schedule</h3>
+        <div class="tools">
+          <button class="ghost" onclick="admin_loadSchedules()">Refresh</button>
+        </div>
+      </div>
+      <div id="sched_table_wrap">Loading schedules...</div>
+    </div>
+  `);
+
+  admin_loadProvidersForSchedule();
+  admin_loadSchedules();
+}
+
+async function admin_loadProvidersForSchedule() {
+  const select = document.getElementById("sched_provider");
+  if (!select) return;
+
+  try {
+    const data = await api("api/shared/providers_list.php");
+    const providers = data.providers || [];
+
+    select.innerHTML = `
+      <option value="">Select provider</option>
+      ${providers.map(p => `
+        <option value="${p.User_ID}">Dr. ${p.First_Name} ${p.Last_Name}</option>
+      `).join("")}
+    `;
+  } catch (err) {
+    select.innerHTML = `<option value="">Failed to load providers</option>`;
+    throw err;
+  }
+}
+
+async function admin_loadSchedules() {
+  const wrap = document.getElementById("sched_table_wrap");
+  if (!wrap) return;
+
+  try {
+    const data = await api("api/shared/schedules_list.php");
+    const schedules = data.schedules || [];
+
+    const dayNames = {
+      1: "Sunday",
+      2: "Monday",
+      3: "Tuesday",
+      4: "Wednesday",
+      5: "Thursday",
+      6: "Friday",
+      7: "Saturday"
+    };
+
+    const rows = schedules.map(s => `
+      <tr>
+        <td>Dr. ${s.First_Name} ${s.Last_Name}</td>
+        <td>${dayNames[Number(s.Day_Of_The_Week)] || s.Day_Of_The_Week}</td>
+        <td>${String(s.Start_Time).slice(0,5)}</td>
+        <td>${String(s.End_Time).slice(0,5)}</td>
+        <td>
+          <button class="small gold" onclick="admin_deleteSchedule(${s.Schedule_ID})">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="5">No schedule blocks found.</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    wrap.innerHTML = `<div class="err">Failed to load schedules.</div>`;
+    throw err;
+  }
+}
+
+async function admin_saveSchedule() {
+  const payload = {
+    providerUserId: Number(document.getElementById("sched_provider")?.value || 0),
+    dayOfWeek: Number(document.getElementById("sched_day")?.value || 0),
+    startTime: document.getElementById("sched_start")?.value || "",
+    endTime: document.getElementById("sched_end")?.value || ""
+  };
+
+  const msg = document.getElementById("sched_msg");
+
+  if (!payload.providerUserId || !payload.dayOfWeek || !payload.startTime || !payload.endTime) {
+    if (msg) msg.innerHTML = `<div class="err">All schedule fields are required.</div>`;
+    return;
+  }
+
+  if (msg) msg.innerHTML = "Saving schedule block...";
+
+  try {
+    await api("api/shared/schedules_save.php", "POST", payload);
+
+    if (msg) msg.innerHTML = `<div class="ok">Schedule block added successfully.</div>`;
+    toast("Success", "Schedule block added successfully.", "ok");
+
+    document.getElementById("sched_day").value = "1";
+    document.getElementById("sched_start").value = "";
+    document.getElementById("sched_end").value = "";
+
+    admin_loadSchedules();
+  } catch (err) {
+    const errorMessage = err?.error || "Failed to save schedule block.";
+    if (msg) msg.innerHTML = `<div class="err">${errorMessage}</div>`;
+    throw err;
+  }
+}
+
+async function admin_deleteSchedule(scheduleId) {
+  try {
+    await api("api/shared/schedules_delete.php", "POST", {
+      scheduleId: Number(scheduleId)
+    });
+
+    toast("Success", "Schedule block deleted.", "ok");
+    admin_loadSchedules();
+  } catch (err) {
+    toast("Error", err?.error || "Failed to delete schedule block.", "err");
+    throw err;
+  }
 }

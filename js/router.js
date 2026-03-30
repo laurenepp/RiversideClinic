@@ -11,9 +11,10 @@ function buildMenu(role) {
     menu.innerHTML = `
       <button class="nav-btn" onclick="admin_home()">Dashboard</button>
       <button class="nav-btn" onclick="admin_users()">User Management</button>
-      <button class="nav-btn" onclick="adminAppointments()">Appointments</button>
-      <button class="nav-btn" onclick="admin_staff()">Staff</button>
+      <button class="nav-btn" onclick="admin_appointments()">Appointments</button>
+      <button class="nav-btn" onclick="admin_staff()">Staff Scheduling</button>
       <button class="nav-btn" onclick="admin_reports()">Reports</button>
+      <button class="nav-btn" onclick="admin_clinicHours()">Clinic Hours</button>
       <button class="nav-btn" onclick="admin_settings()">Settings</button>
       <button class="nav-btn logout" onclick="doLogout()">Logout</button>
     `;
