@@ -125,28 +125,6 @@ CREATE TABLE `Room` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================
--- Clinic Hours
--- =========================
-
-CREATE TABLE `Clinic_Hours` (
-  `Clinic_Hours_ID` BIGINT NOT NULL AUTO_INCREMENT,
-  `Day_Of_Week` TINYINT NOT NULL,
-  `Is_Open` TINYINT(1) NOT NULL DEFAULT 1,
-  `Open_Time` TIME NULL,
-  `Close_Time` TIME NULL,
-  PRIMARY KEY (`Clinic_Hours_ID`),
-  UNIQUE KEY `uk_Clinic_Hours_Day_Of_Week` (`Day_Of_Week`),
-  CONSTRAINT `chk_Clinic_Hours_Day_Of_Week`
-    CHECK (`Day_Of_Week` BETWEEN 1 AND 7),
-  CONSTRAINT `chk_Clinic_Hours_Time_Range`
-    CHECK (
-      (`Is_Open` = 0 AND `Open_Time` IS NULL AND `Close_Time` IS NULL)
-      OR
-      (`Is_Open` = 1 AND `Open_Time` IS NOT NULL AND `Close_Time` IS NOT NULL AND `Open_Time` < `Close_Time`)
-    )
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- =========================
 -- Scheduling
 -- =========================
 
