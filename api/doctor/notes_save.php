@@ -13,8 +13,16 @@ if ($visitId <= 0 || $noteText === "") {
 }
 
 $pdo->prepare("
-  INSERT INTO Visit_Notes (Visit_ID, Created_By_User_ID, Visit_Note)
-  VALUES (?, ?, ?)
+  INSERT INTO Visit_Notes (
+    Visit_ID,
+    Created_By_User_ID,
+    Visit_Note,
+    Note_Date_Time
+  )
+  VALUES (?, ?, ?, NOW())
 ")->execute([$visitId, $user["id"], $noteText]);
 
-echo json_encode(["success" => true, "noteId" => (int)$pdo->lastInsertId()]);
+echo json_encode([
+  "success" => true,
+  "noteId" => (int)$pdo->lastInsertId()
+]);

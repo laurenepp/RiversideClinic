@@ -5,86 +5,22 @@ function loadReceptionist() {
   content.innerHTML = `
     <div class="card">
       <h2>Receptionist Dashboard</h2>
-      <p>Patients + Appointments</p>
+      <p>Check in scheduled patients and complete checkout after the visit.</p>
 
       <div id="rx_tiles"></div>
       <div id="rx_next" style="margin-top:18px;"></div>
+      <div id="rx_checkout" style="margin-top:18px;"></div>
+      <div id="rx_panel" style="margin-top:18px;"></div>
+      <div id="rx_modal_root"></div>
     </div>
   `;
 
   rx_loadTilesAndNext();
 }
 
-function loadReceptionistPatientCreate() {
-  const content = document.getElementById("dash_view") || document.getElementById("content");
-  content.innerHTML = `
-    <div class="card">
-      <h2>Register Patient</h2>
-      <p>Create a new patient record.</p>
-      <div id="rx_panel" style="margin-top:18px;"></div>
-    </div>
-  `;
-
-  rx_showPatientCreate();
-}
-
-
 function rx_panel(html){
-  document.getElementById("rx_panel").innerHTML = html;
-}
-
-async function rx_loadTilesAndNext(){
-  const tilesWrap = document.getElementById("rx_tiles");
-  const nextWrap  = document.getElementById("rx_next");
-
-  tilesWrap.innerHTML = `<div style="margin-top:12px; color: var(--muted); font-weight:700;">Loading front desk…</div>`;
-  nextWrap.innerHTML  = "";
-
-  const d = await api("api/receptionist/dashboard_summary.php");
-
-  tilesWrap.innerHTML = `
-    <div class="tiles">
-      ${rx_tile("Patients (Total)", d.totalPatients, `Clinic registry`, "P", "sage")}
-      ${rx_tile("Appointments Today", d.appointmentsToday, `All statuses`, "C", "gold")}
-      ${rx_tile("Scheduled Today", d.scheduledToday, `Upcoming visits`, "S", "teal")}
-      ${rx_tile("Checked-In Today", d.checkedInToday, `Waiting/arrived`, "&#10003;", "dark")}
-      ${rx_tile("Completed Today", d.completedToday, `Finished`, "&#10003;", "teal")}
-      ${rx_tile("Cancelled Today", d.cancelledToday, `Cancelled`, "&#10005;", "danger")}
-    </div>
-  `;
-
-  const rows = (d.nextUp || []).map(a => `
-    <tr>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${a.Patient_Last}, ${a.Patient_First}</td>
-      <td>Dr. ${a.Provider_Last}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
-      <td>
-        <button class="small gold" onclick="rx_checkin(${a.Appointment_ID})">Check-In</button>
-      </td>
-    </tr>
-  `).join("");
-
-  nextWrap.innerHTML = `
-    <div class="section">
-      <div class="section-title">
-        <h3>Next Up</h3>
-        <div class="tools">
-          <button class="ghost" onclick="rx_loadTilesAndNext()">Refresh</button>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Start</th><th>Patient</th><th>Provider</th><th>Status</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows || `<tr><td colspan="5">No upcoming appointments today.</td></tr>`}
-        </tbody>
-      </table>
-    </div>
-  `;
+  const el = document.getElementById("rx_panel");
+  if (el) el.innerHTML = html;
 }
 
 function rx_tile(label, value, sub, iconText, tone){
@@ -100,63 +36,327 @@ function rx_tile(label, value, sub, iconText, tone){
   `;
 }
 
-/* -------------------------
-   PATIENTS
-------------------------- */
+function rx_openModal(title, subtitle, bodyHtml, footerHtml = "") {
+  const root = document.getElementById("rx_modal_root");
+  if (!root) return;
 
-function rx_showPatientSearch(){
-  rx_panel(`
-    <div class="section-title">
-      <h3>Search Patients</h3>
-      <div class="tools">
-        <button class="ghost" onclick="rx_panel('')">Close</button>
+  root.innerHTML = `
+    <div class="appt-modal-backdrop" onclick="rx_closeModal()">
+      <div class="appt-modal" onclick="event.stopPropagation()">
+        <div class="appt-modal-header">
+          <div>
+            <h3>${title}</h3>
+            ${subtitle ? `<div class="appt-modal-sub">${subtitle}</div>` : ""}
+          </div>
+          <button class="ghost" onclick="rx_closeModal()">Close</button>
+        </div>
+
+        <div class="appt-modal-body">
+          ${bodyHtml}
+        </div>
+
+        ${footerHtml ? `
+          <div class="appt-modal-footer">
+            ${footerHtml}
+          </div>
+        ` : ""}
       </div>
     </div>
-
-    <div class="row compact">
-      <div class="field">
-        <label>Search</label>
-        <input id="rx_search" placeholder="Name / phone / email">
-      </div>
-      <div style="align-self:end;">
-        <button class="primary" onclick="rx_patientSearch()">Search</button>
-      </div>
-    </div>
-
-    <div id="rx_results" style="margin-top:12px;"></div>
-  `);
+  `;
 }
 
-async function rx_patientSearch(){
-  const q = document.getElementById("rx_search").value.trim();
-  if(!q){
-    toast("Search", "Type something to search.", "err");
-    return;
-  }
+function rx_closeModal() {
+  const root = document.getElementById("rx_modal_root");
+  if (root) root.innerHTML = "";
+}
 
-  const data = await api(`api/receptionist/patients_search.php?search=${encodeURIComponent(q)}`);
+async function rx_loadTilesAndNext(){
+  const tilesWrap = document.getElementById("rx_tiles");
+  const nextWrap  = document.getElementById("rx_next");
+  const checkoutWrap = document.getElementById("rx_checkout");
 
-  const rows = data.patients.map(p => `
+  if (!tilesWrap || !nextWrap || !checkoutWrap) return;
+
+  tilesWrap.innerHTML = `<div style="margin-top:12px; color: var(--muted); font-weight:700;">Loading front desk…</div>`;
+  nextWrap.innerHTML  = "";
+  checkoutWrap.innerHTML = "";
+
+  const d = await api("api/receptionist/dashboard_summary.php");
+
+  tilesWrap.innerHTML = `
+    <div class="tiles">
+      ${rx_tile("Patients (Total)", d.totalPatients ?? 0, `Clinic registry`, "P", "sage")}
+      ${rx_tile("Appointments Today", d.appointmentsToday ?? 0, `All statuses`, "C", "gold")}
+      ${rx_tile("Scheduled Today", d.scheduledToday ?? 0, `Needs check-in`, "S", "teal")}
+      ${rx_tile("Checked-In Today", d.checkedInToday ?? 0, `Waiting for nurse`, "&#10003;", "dark")}
+      ${rx_tile("Ready for Provider", d.readyToday ?? 0, `Waiting for doctor`, "R", "sage")}
+      ${rx_tile("Completed Today", d.completedToday ?? 0, `Ready to bill`, "$", "teal")}
+    </div>
+  `;
+
+  const scheduledRows = (d.scheduledQueue || []).map(a => `
     <tr>
-      <td>${p.Patient_ID}</td>
-      <td>${p.Last_Name}, ${p.First_Name}</td>
-      <td>${p.Phone_Number}</td>
-      <td>${p.Email ?? ""}</td>
-      <td>${p.Date_Of_Birth}</td>
-      <td><button class="small" onclick='rx_editPatient(${JSON.stringify(p)})'>Edit</button></td>
+      <td>${fmtDT(a.Scheduled_Start)}</td>
+      <td>${a.Patient_Last}, ${a.Patient_First}</td>
+      <td>${a.Date_Of_Birth || ""}</td>
+      <td>Dr. ${a.Provider_Last}</td>
+      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
+      <td><button class="small gold" onclick="rx_openCheckIn(${a.Appointment_ID})">Check In</button></td>
     </tr>
   `).join("");
 
-  document.getElementById("rx_results").innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>DOB</th><th></th>
-        </tr>
-      </thead>
-      <tbody>${rows || `<tr><td colspan="6">No results</td></tr>`}</tbody>
-    </table>
+  nextWrap.innerHTML = `
+    <div class="section">
+      <div class="section-title">
+        <h3>Receptionist Queue</h3>
+        <div class="tools">
+          <button class="ghost" onclick="rx_loadTilesAndNext()">Refresh</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Start</th><th>Patient</th><th>DOB</th><th>Provider</th><th>Status</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${scheduledRows || `<tr><td colspan="6">No scheduled patients for today.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
   `;
+
+  const completedRows = (d.checkoutQueue || []).map(a => `
+    <tr>
+      <td>${fmtDT(a.Scheduled_Start)}</td>
+      <td>${a.Patient_Last}, ${a.Patient_First}</td>
+      <td>Dr. ${a.Provider_Last}</td>
+      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
+      <td><button class="small primary" onclick="rx_billAndReschedule(${a.Appointment_ID})">Bill / Reschedule</button></td>
+    </tr>
+  `).join("");
+
+  checkoutWrap.innerHTML = `
+    <div class="section">
+      <div class="section-title">
+        <h3>Checkout Queue</h3>
+        <div class="tools"></div>
+      </div>
+      <table>
+        <thead><tr><th>Visit</th><th>Patient</th><th>Provider</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>${completedRows || `<tr><td colspan="5">No completed patients waiting on checkout.</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function receptionistAppointments() {
+  loadAppointmentsPage({
+    role: "receptionist",
+    canCreate: true,
+    canEdit: true,
+    canCheckIn: true,
+    providerScope: "all",
+    allowScopeToggle: false
+  });
+}
+
+async function rx_openCheckIn(appointmentId) {
+  try {
+    const data = await api(`api/receptionist/patients_checkin_get.php?appointmentId=${appointmentId}`);
+
+    const a = data.appointment || {};
+    const ins = data.insurance || {};
+
+    const patientId = a.Patient_ID || 0;
+    const patientName = `${a.Last_Name || ""}, ${a.First_Name || ""}`.trim().replace(/^,\s*/, "") || "Patient";
+    const dob = a.Date_Of_Birth || "";
+    const phone = a.Phone_Number || "";
+
+    const addressLine1 = a.Address_Line1 || "";
+    const addressLine2 = a.Address_Line2 || "";
+    const city = a.City || "";
+    const state = a.State || "";
+    const postalCode = a.Postal_Code || "";
+
+    const insuranceProvider = ins.Insurance_Provider || "";
+    const policyNumber = ins.Policy_Number || "";
+    const policyHolder = ins.Policy_Holder || "";
+
+    rx_openModal(
+      "Check In Patient",
+      `${patientName}${dob ? ` • DOB: ${dob}` : ""}`,
+      `
+        <input id="rx_patient_id" type="hidden" value="${patientId}">
+
+        <div class="form-grid">
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Full Name</label>
+            <input type="text" value="${patientName}" disabled>
+          </div>
+
+          <div class="field">
+            <label>Date of Birth</label>
+            <input type="text" value="${dob}" disabled>
+          </div>
+
+          <div class="field">
+            <label>Phone Number</label>
+            <input id="rx_phone" type="text" value="${phone}">
+          </div>
+
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Address Line 1</label>
+            <input id="rx_address1" type="text" value="${addressLine1}">
+          </div>
+
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Address Line 2</label>
+            <input id="rx_address2" type="text" value="${addressLine2}">
+          </div>
+
+          <div class="field">
+            <label>City</label>
+            <input id="rx_city" type="text" value="${city}">
+          </div>
+
+          <div class="field">
+            <label>State</label>
+            <input id="rx_state" type="text" value="${state}">
+          </div>
+
+          <div class="field">
+            <label>Postal Code</label>
+            <input id="rx_postal" type="text" value="${postalCode}">
+          </div>
+
+          <div class="field">
+            <label>Insurance Provider</label>
+            <input id="rx_insurance_provider" type="text" value="${insuranceProvider}">
+          </div>
+
+          <div class="field">
+            <label>Policy Number</label>
+            <input id="rx_policy_number" type="text" value="${policyNumber}">
+          </div>
+
+          <div class="field" style="grid-column:1 / -1;">
+            <label>Policy Holder</label>
+            <input id="rx_policy_holder" type="text" value="${policyHolder}">
+          </div>
+        </div>
+
+        <div id="rx_checkin_msg" style="margin-top:10px;"></div>
+      `,
+      `
+        <button class="ghost" onclick="rx_closeModal()">Close</button>
+        <button class="primary" onclick="rx_saveCheckIn(${appointmentId})">Check In Patient</button>
+      `
+    );
+  } catch (err) {
+    toast("Error", err.message || "Unable to load check-in form.", "error");
+  }
+}
+
+async function rx_saveCheckIn(appointmentId) {
+  const payload = {
+    appointmentId: appointmentId,
+    patientId: parseInt(document.getElementById("rx_patient_id")?.value || "0", 10),
+    addressLine1: document.getElementById("rx_address1")?.value?.trim() || "",
+    addressLine2: document.getElementById("rx_address2")?.value?.trim() || "",
+    city: document.getElementById("rx_city")?.value?.trim() || "",
+    state: document.getElementById("rx_state")?.value?.trim() || "",
+    postalCode: document.getElementById("rx_postal")?.value?.trim() || "",
+    phoneNumber: document.getElementById("rx_phone")?.value?.trim() || "",
+    insuranceProvider: document.getElementById("rx_insurance_provider")?.value?.trim() || "",
+    policyNumber: document.getElementById("rx_policy_number")?.value?.trim() || "",
+    policyHolder: document.getElementById("rx_policy_holder")?.value?.trim() || ""
+  };
+
+  try {
+    await api("api/receptionist/patient_checkin_save.php", "POST", payload);
+    toast("Checked In", "Patient checked in successfully.", "ok");
+    rx_closeModal();
+    rx_loadTilesAndNext();
+  } catch (err) {
+    const msg = document.getElementById("rx_checkin_msg");
+    if (msg) {
+      msg.innerHTML = `<div class="alert error">${err.message || "Unable to check in patient."}</div>`;
+    } else {
+      toast("Error", err.message || "Unable to check in patient.", "error");
+    }
+  }
+}
+
+async function rx_billAndReschedule(appointmentId) {
+  rx_openModal(
+    "Bill and Reschedule",
+    `Appointment #${appointmentId}`,
+    `
+      <div class="form-grid">
+        <div class="field">
+          <label>Billing Amount</label>
+          <input id="rx_bill_amount" type="number" step="0.01" value="0.00">
+        </div>
+
+        <div class="field">
+          <label>Billing Status</label>
+          <select id="rx_bill_status">
+            <option value="UNPAID">UNPAID</option>
+            <option value="PAID">PAID</option>
+            <option value="PENDING">PENDING</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Next Appointment Start</label>
+          <input id="rx_next_start" type="datetime-local">
+        </div>
+
+        <div class="field">
+          <label>Next Appointment End</label>
+          <input id="rx_next_end" type="datetime-local">
+        </div>
+      </div>
+
+      <div id="rx_checkout_msg" style="margin-top:10px;"></div>
+    `,
+    `
+      <button class="ghost" onclick="rx_closeModal()">Close</button>
+      <button class="primary" onclick="rx_saveBillReschedule(${appointmentId})">
+        Save Billing and Schedule Next Visit
+      </button>
+    `
+  );
+}
+
+async function rx_saveBillReschedule(appointmentId) {
+  const payload = {
+    appointmentId,
+    amount: document.getElementById("rx_bill_amount")?.value || "0.00",
+    billingStatus: document.getElementById("rx_bill_status")?.value || "UNPAID",
+    nextStart: (document.getElementById("rx_next_start")?.value || "").replace("T", " ") + ":00",
+    nextEnd: (document.getElementById("rx_next_end")?.value || "").replace("T", " ") + ":00"
+  };
+  const msg = document.getElementById("rx_checkout_msg");
+  if (msg) msg.textContent = "Saving checkout...";
+  await api("api/receptionist/billing_reschedule_save.php", "POST", payload);
+  toast("Checkout Complete", "Patient billed and next visit scheduled.", "ok");
+  rx_closeModal();
+  rx_loadTilesAndNext();
+}
+
+function loadReceptionistPatientCreate() {
+  const content = document.getElementById("dash_view") || document.getElementById("content");
+  content.innerHTML = `
+    <div class="card">
+      <h2>Register Patient</h2>
+      <p>Create a new patient record.</p>
+      <div id="rx_panel" style="margin-top:18px;"></div>
+    </div>
+  `;
+
+  rx_showPatientCreate();
 }
 
 function rx_showPatientCreate() {
@@ -233,22 +433,17 @@ function rx_showPatientCreate() {
           </div>
 
           <div class="field">
-            <label>Payment Status</label>
-            <select id="ins_status">
-              <option value="">Select status</option>
-              <option value="PENDING">PENDING</option>
-              <option value="PAID">PAID</option>
-              <option value="DENIED">DENIED</option>
-            </select>
+            <label>Policy Number</label>
+            <input id="ins_policy_number" placeholder="Policy Number">
           </div>
 
           <div class="field">
-            <label>Date Sent</label>
-            <input id="ins_date_sent" type="date">
+            <label>Policy Holder</label>
+            <input id="ins_policy_holder" placeholder="Policy Holder">
           </div>
         </div>
 
-        <div class="hint">Optional for first version.</div>
+        <div class="hint">If the patient does not have insurance, leave these fields blank.</div>
       </details>
     </div>
 
@@ -258,6 +453,61 @@ function rx_showPatientCreate() {
 
     <div id="rx_msg" style="margin-top:10px;"></div>
   `);
+}
+
+function rx_showPatientSearch(){
+  rx_panel(`
+    <div class="section-title">
+      <h3>Search Patients</h3>
+      <div class="tools">
+        <button class="ghost" onclick="rx_panel('')">Close</button>
+      </div>
+    </div>
+
+    <div class="row compact">
+      <div class="field">
+        <label>Search</label>
+        <input id="rx_search" placeholder="Name / phone / email">
+      </div>
+      <div style="align-self:end;">
+        <button class="primary" onclick="rx_patientSearch()">Search</button>
+      </div>
+    </div>
+
+    <div id="rx_results" style="margin-top:12px;"></div>
+  `);
+}
+
+async function rx_patientSearch(){
+  const q = document.getElementById("rx_search").value.trim();
+  if(!q){
+    toast("Search", "Type something to search.", "err");
+    return;
+  }
+
+  const data = await api(`api/receptionist/patients_search.php?search=${encodeURIComponent(q)}`);
+
+  const rows = data.patients.map(p => `
+    <tr>
+      <td>${p.Patient_ID}</td>
+      <td>${p.Last_Name}, ${p.First_Name}</td>
+      <td>${p.Phone_Number}</td>
+      <td>${p.Email ?? ""}</td>
+      <td>${p.Date_Of_Birth}</td>
+      <td><button class="small" onclick='rx_editPatient(${JSON.stringify(p)})'>Edit</button></td>
+    </tr>
+  `).join("");
+
+  document.getElementById("rx_results").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>DOB</th><th></th>
+        </tr>
+      </thead>
+      <tbody>${rows || `<tr><td colspan="6">No results</td></tr>`}</tbody>
+    </table>
+  `;
 }
 
 async function rx_createPatient() {
@@ -274,8 +524,8 @@ async function rx_createPatient() {
     emergencyRelationship: document.getElementById("ec_relationship")?.value.trim() || "",
 
     insuranceProvider: document.getElementById("ins_provider")?.value.trim() || "",
-    insuranceStatus: document.getElementById("ins_status")?.value || "",
-    insuranceDateSent: document.getElementById("ins_date_sent")?.value || ""
+    insurancePolicyNumber: document.getElementById("ins_policy_number")?.value.trim() || "",
+    insurancePolicyHolder: document.getElementById("ins_policy_holder")?.value.trim() || ""
   };
 
   if (!payload.firstName || !payload.lastName || !payload.dob) {
@@ -300,19 +550,4 @@ async function rx_createPatient() {
     }
     throw err;
   }
-}
-
-function receptionistAppointments() {
-  loadAppointmentsPage({
-    role: "receptionist",
-    canCreate: true,
-    canEdit: true,
-    canCheckIn: true,
-    providerScope: "all",
-    allowScopeToggle: false
-  });
-}
-
-async function rx_checkin(appointmentId) {
-  toast("Not Ready", `Check-in for appointment ${appointmentId} is not wired yet.`, "err");
 }
