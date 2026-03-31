@@ -20,9 +20,13 @@ $stmt = $pdo->prepare("
     p.First_Name AS Patient_First,
     p.Last_Name AS Patient_Last,
     p.Date_Of_Birth,
-    p.Gender,
     p.Phone_Number,
-    p.Email
+    p.Email,
+    p.Address_Line1,
+    p.Address_Line2,
+    p.City,
+    p.State,
+    p.Postal_Code
   FROM Appointment a
   JOIN Patient p ON a.Patient_ID = p.Patient_ID
   WHERE a.Appointment_ID = ?
@@ -37,6 +41,4 @@ if (!$row) {
   exit;
 }
 
-echo json_encode([
-  "appointment" => $row
-]);
+echo json_encode(["appointment" => $row]);

@@ -9,14 +9,24 @@ if ($appointmentId <= 0) {
   exit;
 }
 
-$stmt = $pdo->prepare("
-  SELECT Intake_ID, Appointment_ID, Created_By_User_ID, Created_At,
-         Vitals, Chief_Complaint, Allergies, Medications
-  FROM Intakes
-  WHERE Appointment_ID = ?
-  LIMIT 1
-");
+$stmt = $pdo->prepare("SELECT Visit_ID FROM Visit WHERE Appointment_ID = ? LIMIT 1");
 $stmt->execute([$appointmentId]);
-$intake = $stmt->fetch(PDO::FETCH_ASSOC);
+$visit = $stmt->fetch(PDO::FETCH_ASSOC);
 
-echo json_encode(["intake" => $intake ?: null]);
+if (!$visit) {
+  echo json_encode(["intake" => null]);
+  exit;
+}
+
+$visitId = (int)$visit['Visit_ID'];
+
+$stmt = $pdo->prepare("SELECT Nurse_Intake_Note, Blood_Pressure, Pulse, Respiration, Temperature,
+  Oxygen_Saturation, Height, Weight, Pain_Level FROM Visit_Exam WHERE Visit_ID = ? LIMIT 1");
+$stmt->execute([$visitId]);
+$exam = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+$stmt = $pdo->prepare("SELECT Current_Medications, Medication_Changes, Medication_Notes FROM Visit_Medication WHERE Visit_ID = ? LIMIT 1");
+$stmt->execute([$visitId]);
+$meds = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+echo json_encode(["intake" => array_merge($exam, $meds, ['Visit_ID' => $visitId])]);

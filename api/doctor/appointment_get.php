@@ -11,7 +11,7 @@ if ($appointmentId <= 0) {
 
 /* NOTE:
    Keep the main version layout, but preserve the richer patient fields
-   already present there so the appointment drawer can show more detail.
+   so the appointment drawer can show more detail.
 */
 $stmt = $pdo->prepare("
   SELECT
@@ -26,7 +26,12 @@ $stmt = $pdo->prepare("
     p.Date_Of_Birth,
     p.Gender,
     p.Phone_Number,
-    p.Email
+    p.Email,
+    p.Address_Line1,
+    p.Address_Line2,
+    p.City,
+    p.State,
+    p.Postal_Code
   FROM Appointment a
   JOIN Patient p ON a.Patient_ID = p.Patient_ID
   WHERE a.Appointment_ID = ?
@@ -44,7 +49,8 @@ if (!$row) {
   echo json_encode(["error" => "Appointment not found"]);
   exit;
 }
- /* NOTE:
+
+/* NOTE:
    doctor.js expects JSON in this exact shape:
    { appointment: {...} }
 */
