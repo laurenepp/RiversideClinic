@@ -3,6 +3,92 @@
 <head>
   <title>Riverside Clinic</title>
   <link rel="stylesheet" href="assets/css/styles.css">
+
+  <style>
+    .logout-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .logout-modal.show {
+      display: flex;
+    }
+
+    .logout-modal-card {
+      width: 100%;
+      max-width: 450px;
+      background: #f6f6f6;
+      border-radius: 12px;
+      padding: 30px 28px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .logout-modal-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      background: #caa64d;
+    }
+
+    .logout-modal-card h2 {
+      margin: 0 0 12px;
+      font-size: 2rem;
+      color: #1f2a44;
+    }
+
+    .logout-modal-card p {
+      margin: 0 auto 24px;
+      max-width: 320px;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: #1f2a44;
+    }
+
+    .logout-modal-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .logout-stay-btn,
+    .logout-confirm-btn {
+      min-width: 180px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .logout-stay-btn {
+      background: #ffffff;
+      color: #1f2a44;
+      border: 2px solid #c9cdd4;
+    }
+
+    .logout-stay-btn:hover {
+      background: #f0f2f5;
+    }
+
+    .logout-confirm-btn {
+      background: #5a9597;
+      color: #ffffff;
+      border: none;
+    }
+
+    .logout-confirm-btn:hover {
+      background: #4d8587;
+    }
+  </style>
 </head>
 
 <body>
@@ -14,7 +100,6 @@
           alt="Riverside Family Clinic Logo"
           class="brand-logo"
         >
-
         <div class="title">
           <div class="name">Riverside Family Clinic</div>
           <div class="sub" id="sidebarUser"></div>
@@ -29,13 +114,25 @@
     </div>
   </div>
 
+  <!-- Logout Confirmation Modal -->
+  <div id="logoutModal" class="logout-modal">
+    <div class="logout-modal-card">
+      <div class="logout-modal-icon"></div>
+      <h2>Log Out</h2>
+      <p>Are you sure you want to log out of the Riverside Family Clinic Staff Portal?</p>
+
+      <div class="logout-modal-actions">
+        <button class="logout-stay-btn" onclick="cancelLogout()">Stay Logged In</button>
+        <button class="logout-confirm-btn" onclick="confirmLogout()">Log Out</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/router.js"></script>
-  <script src="js/appointments.js"></script>
 
-  <!-- Role modules -->
   <script src="js/roles/receptionist.js"></script>
   <script src="js/roles/doctor.js"></script>
   <script src="js/roles/nurse.js"></script>

@@ -68,12 +68,6 @@ async function start() {
     const user = await api("api/auth/me.php");
 
     document.querySelector(".app")?.classList.remove("logged-out");
-
-    const welcome = document.getElementById("welcome");
-    if (welcome) {
-      welcome.innerText = `${user.name} (${user.role})`;
-    }
-
     setSidebarUser(user);
 
     const role = normalizeRole(user.role);
@@ -96,25 +90,15 @@ function showLogin() {
   const menu = document.getElementById("menu");
   if (menu) menu.innerHTML = "";
 
-  const welcome = document.getElementById("welcome");
-  if (welcome) welcome.innerText = "";
-
   setSidebarUser(null);
+  hideLogoutModal();
 
   document.getElementById("content").innerHTML = `
     <div class="login-screen">
       <div class="login-left">
         <div class="login-logo-wrap">
-          <img
-            src="assets/images/Desert 1 Circle.png"
-            alt="Riverside Clinic Logo"
-            class="login-logo"
-          >
-          <img
-            src="assets/images/Desert Riverside Text.png"
-            alt="Riverside Clinic"
-            class="login-logo-text"
-          >
+          <img src="assets/images/Desert 1 Circle.png" class="login-logo" alt="Riverside Family Clinic Logo">
+          <img src="assets/images/Desert Riverside Text.png" class="login-logo-text" alt="Riverside Family Clinic">
         </div>
       </div>
 
@@ -127,22 +111,10 @@ function showLogin() {
 
             <form id="loginForm" class="login-form">
               <label for="u">Username</label>
-              <input
-                id="u"
-                name="username"
-                type="text"
-                placeholder="Enter username"
-                autocomplete="username"
-              >
+              <input id="u" type="text" autocomplete="username">
 
               <label for="p">Password</label>
-              <input
-                id="p"
-                name="password"
-                type="password"
-                placeholder="Enter password"
-                autocomplete="current-password"
-              >
+              <input id="p" type="password" autocomplete="current-password">
 
               <button type="submit" class="login-btn">Login</button>
             </form>
@@ -198,48 +170,25 @@ function showFirstLoginPasswordModal() {
 
   const overlay = document.createElement("div");
   overlay.id = "first-login-password-overlay";
-
   overlay.innerHTML = `
-    <div class="fl-overlay">
-      <div class="fl-modal">
-        <h2 class="fl-title">Change Temporary Password</h2>
-        <p class="fl-subtext">
-          This is your first login. You must create a new password before continuing.
-        </p>
+    <div class="first-login-password-modal">
+      <h2>Change Temporary Password</h2>
+      <p>This is your first login. You must create a new password before continuing.</p>
 
-        <div class="fl-form">
-          <label for="firstLoginNewPassword">New Password</label>
-          <input
-            id="firstLoginNewPassword"
-            type="password"
-            placeholder="Enter new password"
-            autocomplete="new-password"
-          >
+      <label for="firstLoginNewPassword">New Password</label>
+      <input id="firstLoginNewPassword" type="password">
 
-          <label for="firstLoginConfirmPassword">Confirm New Password</label>
-          <input
-            id="firstLoginConfirmPassword"
-            type="password"
-            placeholder="Confirm new password"
-            autocomplete="new-password"
-          >
+      <label for="firstLoginConfirmPassword">Confirm New Password</label>
+      <input id="firstLoginConfirmPassword" type="password">
 
-          <div class="fl-hint">
-            Password must be at least 8 characters and include:
-            1 uppercase letter, 1 lowercase letter, and 1 special character.
-          </div>
+      <div id="firstLoginPasswordMsg" class="first-login-password-msg"></div>
 
-          <div id="firstLoginPasswordMsg" class="fl-msg"></div>
+      <p class="first-login-password-help">
+        Password must be at least 8 characters and include:
+        1 uppercase letter, 1 lowercase letter, and 1 special character.
+      </p>
 
-          <button
-            type="button"
-            onclick="submitFirstLoginPasswordChange()"
-            class="fl-btn"
-          >
-            Save New Password
-          </button>
-        </div>
-      </div>
+      <button onclick="submitFirstLoginPasswordChange()">Save New Password</button>
     </div>
   `;
 
@@ -302,11 +251,7 @@ async function submitFirstLoginPasswordChange() {
 // -----------------------------
 function renderDashboardShell(role) {
   document.getElementById("content").innerHTML = `
-    <div class="dashboard">
-      <div class="dash-main">
-        <div id="dash_view"></div>
-      </div>
-    </div>
+    <div id="dash_view"></div>
   `;
 
   if (typeof buildMenu === "function") {
@@ -334,9 +279,9 @@ function renderDashboardShell(role) {
   }
 
   setView(`
-    <div style="padding:10px;">
-      <b>Unknown role:</b> ${role}<br><br>
-      <button class="nav-btn logout" onclick="doLogout()">Logout</button>
+    <div class="card">
+      <h2>Unknown role: ${role}</h2>
+      <button onclick="doLogout()">Logout</button>
     </div>
   `);
 }
@@ -350,16 +295,42 @@ function setView(html) {
 }
 
 // -----------------------------
+// Logout modal helpers
+// -----------------------------
+function showLogoutModal() {
+  const modal = document.getElementById("logoutModal");
+  if (modal) {
+    modal.classList.add("show");
+  }
+}
+
+function hideLogoutModal() {
+  const modal = document.getElementById("logoutModal");
+  if (modal) {
+    modal.classList.remove("show");
+  }
+}
+
+// -----------------------------
 // Logout
 // -----------------------------
-async function doLogout() {
+function doLogout() {
+  showLogoutModal();
+}
+
+async function confirmLogout() {
   try {
     await api("api/auth/logout.php", "POST", {});
   } catch (e) {
-    // ignore
+    console.error("Logout failed:", e);
   }
 
-  location.reload();
+  hideLogoutModal();
+  showLogin();
+}
+
+function cancelLogout() {
+  hideLogoutModal();
 }
 
 // -----------------------------
@@ -372,7 +343,7 @@ function admin_home() {
   }
 
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>Administrator Dashboard</h2>
       <p>Admin dashboard is loading.</p>
     </div>
@@ -386,7 +357,7 @@ function admin_users() {
   }
 
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>User Management</h2>
       <p>User management page coming soon.</p>
     </div>
@@ -400,11 +371,9 @@ function admin_reports() {
   }
 
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>Reports</h2>
       <p>Review clinic activity and reporting summaries.</p>
-    </div>
-    <div class="admin-panel-box">
       <p>Reports page coming soon.</p>
     </div>
   `);
@@ -412,11 +381,9 @@ function admin_reports() {
 
 function admin_settings() {
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>Settings</h2>
       <p>Adjust clinic system preferences and admin settings.</p>
-    </div>
-    <div class="admin-panel-box">
       <p>Settings page coming soon.</p>
     </div>
   `);
@@ -432,7 +399,7 @@ function doc_home() {
   }
 
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>Doctor Dashboard</h2>
       <p>Doctor dashboard is loading.</p>
     </div>
@@ -446,7 +413,7 @@ function doc_appointments() {
   }
 
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>Appointments</h2>
       <p>Doctor appointments will appear here.</p>
     </div>
@@ -460,7 +427,7 @@ function doc_patientHistory() {
   }
 
   setView(`
-    <div class="page-header">
+    <div class="card">
       <h2>Patient History</h2>
       <p>Doctor patient history view will appear here.</p>
     </div>
@@ -470,25 +437,30 @@ function doc_patientHistory() {
 // -----------------------------
 // Nurse Views
 // -----------------------------
-
 function nurse_patients() {
   setView(`
-    <h2>Assigned Patients</h2>
-    <p>TODO: Nurse patient list.</p>
+    <div class="card">
+      <h2>Assigned Patients</h2>
+      <p>TODO: Nurse patient list.</p>
+    </div>
   `);
 }
 
 function nurse_vitals() {
   setView(`
-    <h2>Vitals</h2>
-    <p>TODO: Record patient vitals.</p>
+    <div class="card">
+      <h2>Vitals</h2>
+      <p>TODO: Record patient vitals.</p>
+    </div>
   `);
 }
 
 function nurse_tasks() {
   setView(`
-    <h2>Tasks</h2>
-    <p>TODO: Nurse task queue.</p>
+    <div class="card">
+      <h2>Tasks</h2>
+      <p>TODO: Nurse task queue.</p>
+    </div>
   `);
 }
 
@@ -502,8 +474,10 @@ function rx_home() {
   }
 
   setView(`
-    <h2>Receptionist Dashboard</h2>
-    <p>TODO: Check-in, appointments, patient search.</p>
+    <div class="card">
+      <h2>Receptionist Dashboard</h2>
+      <p>TODO: Check-in, appointments, patient search.</p>
+    </div>
   `);
 }
 
@@ -519,8 +493,10 @@ function rx_patients() {
   }
 
   setView(`
-    <h2>Patients</h2>
-    <p>Patient registration is not available right now.</p>
+    <div class="card">
+      <h2>Patients</h2>
+      <p>Patient registration is not available right now.</p>
+    </div>
   `);
 }
 
@@ -536,8 +512,10 @@ function rx_appointments() {
   }
 
   setView(`
-    <h2>Appointments</h2>
-    <p>Appointments are not available right now.</p>
+    <div class="card">
+      <h2>Appointments</h2>
+      <p>Appointments are not available right now.</p>
+    </div>
   `);
 }
 
@@ -548,8 +526,10 @@ function rx_checkin() {
   }
 
   setView(`
-    <h2>Check-In</h2>
-    <p>Front desk check-in workflow is not available right now.</p>
+    <div class="card">
+      <h2>Check-In</h2>
+      <p>Front desk check-in workflow is not available right now.</p>
+    </div>
   `);
 }
 
