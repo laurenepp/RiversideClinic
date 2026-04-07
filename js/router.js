@@ -15,7 +15,6 @@ function buildMenu(role) {
       <button class="nav-btn" onclick="admin_staff()">Staff Scheduling</button>
       <button class="nav-btn" onclick="admin_reports()">Reports</button>
       <button class="nav-btn" onclick="admin_clinicHours()">Clinic Hours</button>
-      <button class="nav-btn" onclick="admin_settings()">Settings</button>
       <button class="nav-btn logout" onclick="doLogout()">Logout</button>
     `;
     return;

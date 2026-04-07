@@ -4,7 +4,7 @@ let adminEventLogs = [];
 let adminEventLogsInterval = null;
 let adminUsersData = [];
 
-function loadAdmin() {
+function loadAdmin() { 
   setView(`
     <div class="admin-home-wrap">
       <div class="page-header">
@@ -15,13 +15,13 @@ function loadAdmin() {
       <div class="admin-cards">
         <div class="admin-card">
           <h3>Total Users</h3>
-          <p>-</p>
+          <p id="admin_total_users">-</p>
           <span>Active clinic accounts</span>
         </div>
 
         <div class="admin-card">
           <h3>Today's Appointments</h3>
-          <p>-</p>
+          <p id="admin_today_appts">-</p>
           <span>Scheduled visits today</span>
         </div>
 
@@ -67,6 +67,29 @@ function loadAdmin() {
   `);
 
   admin_loadTiles();
+  loadAdminSummary();
+}
+
+async function loadAdminSummary() {
+  try {
+    const res = await api("api/admin/dashboard_summary.php");
+    console.log("Admin summary response:", res);
+
+    if (!res) return;
+
+    const totalUsersEl = document.getElementById("admin_total_users");
+    const todayApptsEl = document.getElementById("admin_today_appts");
+
+    if (totalUsersEl) {
+      totalUsersEl.innerText = res.totalUsers ?? 0;
+    }
+
+    if (todayApptsEl) {
+      todayApptsEl.innerText = res.appointmentsToday ?? 0;
+    }
+  } catch (err) {
+    console.error("Admin summary load failed:", err);
+  }
 }
 
 function admin_loadTiles() {
@@ -98,7 +121,10 @@ function admin_loadTiles() {
 
 function admin_panel(html) {
   const panel = document.getElementById("admin_panel");
-  if (panel) panel.innerHTML = html;
+  if (panel) {
+    panel.style.display = "block";
+    panel.innerHTML = html;
+  }
 }
 
 function admin_setActiveTab(tabName) {
@@ -150,7 +176,7 @@ function admin_showUsers() {
         Total Users: 0 | Active: 0 | Locked: 0
       </div>
 
-      <div id="admin_users"></div>
+      <div id="admin_users">Loading users...</div>
     </div>
 
     <div id="admin_panel" class="admin-panel-box" style="display:none;"></div>
@@ -160,59 +186,73 @@ function admin_showUsers() {
   admin_loadUsers();
 }
 
-function admin_loadUsers() {
-  if (!window.adminUsersData || !Array.isArray(window.adminUsersData) || !window.adminUsersData.length) {
-    window.adminUsersData = [
-      {
-        User_ID: 1,
-        First_Name: "Reyna",
-        Last_Name: "Administrator",
-        Email: "reyna@clinic.com",
-        Role_Name: "Administrator",
-        Is_Disabled: 0,
-        Last_Login_At: "-"
-      },
-      {
-        User_ID: 2,
-        First_Name: "Fernando",
-        Last_Name: "Doctor",
-        Email: "fernando@clinic.com",
-        Role_Name: "Doctor",
-        Is_Disabled: 0,
-        Last_Login_At: "-"
-      },
-      {
-        User_ID: 3,
-        First_Name: "Logan",
-        Last_Name: "Nurse",
-        Email: "logan@clinic.com",
-        Role_Name: "Nurse",
-        Is_Disabled: 0,
-        Last_Login_At: "-"
-      },
-      {
-        User_ID: 4,
-        First_Name: "Michael",
-        Last_Name: "Phillips",
-        Email: "michael@clinic.com",
-        Role_Name: "Administrator",
-        Is_Disabled: 0,
-        Last_Login_At: "-"
-      },
-      {
-        User_ID: 5,
-        First_Name: "Andrea",
-        Last_Name: "Receptionist",
-        Email: "andrea@clinic.com",
-        Role_Name: "Receptionist",
-        Is_Disabled: 0,
-        Last_Login_At: "-"
-      }
-    ];
+async function admin_loadUsers() {
+  const usersWrap = document.getElementById("admin_users");
+  const stats = document.getElementById("adminUsersStats");
+
+  if (usersWrap) {
+    usersWrap.innerHTML = `
+      <table class="admin-users-table">
+        <thead>
+          <tr>
+            <th>USER</th>
+            <th>ROLE</th>
+            <th>STATUS</th>
+            <th>LAST LOGIN</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="5">Loading users...</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
   }
 
-  adminUsersData = window.adminUsersData;
-  admin_refreshUsersUI();
+  if (stats) {
+    stats.innerHTML = `Total Users: 0 | Active: 0 | Locked: 0`;
+  }
+
+  try {
+    const data = await api("api/admin/users_list.php");
+
+    adminUsersData = Array.isArray(data) ? data : [];
+    window.adminUsersData = adminUsersData;
+
+    admin_refreshUsersUI();
+  } catch (err) {
+    console.error("Failed to load admin users:", err);
+
+    adminUsersData = [];
+    window.adminUsersData = [];
+
+    if (stats) {
+      stats.innerHTML = `Total Users: 0 | Active: 0 | Locked: 0`;
+    }
+
+    if (usersWrap) {
+      usersWrap.innerHTML = `
+        <table class="admin-users-table">
+          <thead>
+            <tr>
+              <th>USER</th>
+              <th>ROLE</th>
+              <th>STATUS</th>
+              <th>LAST LOGIN</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5">Unable to load users from the database.</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+    }
+  }
 }
 
 function admin_refreshUsersUI() {
@@ -783,13 +823,99 @@ function admin_showReports() {
     </div>
 
     <div class="card">
-      <p>Reporting is temporarily UI-only while backend/database work is in progress.</p>
+      <div class="row" style="gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        <div class="field">
+          <label for="adminReportDateFrom">From</label>
+          <input id="adminReportDateFrom" type="date">
+        </div>
+
+        <div class="field">
+          <label for="adminReportDateTo">To</label>
+          <input id="adminReportDateTo" type="date">
+        </div>
+
+        <div class="field">
+          <label for="adminReportStatus">Status</label>
+          <select id="adminReportStatus">
+            <option value="">All</option>
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="CHECKED_IN">Checked In</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELED">Canceled</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="RESCHEDULED">Rescheduled</option>
+            <option value="NO_SHOW">No Show</option>
+          </select>
+        </div>
+
+        <div class="field" style="align-self:flex-end;">
+          <button class="admin-action-btn" type="button" onclick="admin_loadReport()">Run Report</button>
+        </div>
+      </div>
+
+      <div id="admin_report_wrap">Choose filters and run the report.</div>
     </div>
   `);
 }
 
 async function admin_loadReport() {
-  // intentionally disabled for now
+  const wrap = document.getElementById("admin_report_wrap");
+  if (!wrap) return;
+
+  const from = document.getElementById("adminReportDateFrom")?.value || "";
+  const to = document.getElementById("adminReportDateTo")?.value || "";
+  const status = document.getElementById("adminReportStatus")?.value || "";
+
+  wrap.innerHTML = `<p>Loading report...</p>`;
+
+  try {
+    const params = new URLSearchParams();
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    if (status) params.append("status", status);
+
+    const endpoint = `api/admin/reports_appointments.php${params.toString() ? "?" + params.toString() : ""}`;
+    const data = await api(endpoint);
+
+    const rows = Array.isArray(data) ? data : (data?.appointments || []);
+
+    if (!rows.length) {
+      wrap.innerHTML = `<p>No appointment report data found for the selected filters.</p>`;
+      return;
+    }
+
+    const tableRows = rows.map(r => `
+      <tr>
+        <td>${admin_escapeHtml(String(r.Appointment_ID ?? ""))}</td>
+        <td>${admin_escapeHtml(`${r.Patient_First_Name || ""} ${r.Patient_Last_Name || ""}`.trim() || "-")}</td>
+        <td>${admin_escapeHtml(`${r.Provider_First_Name || ""} ${r.Provider_Last_Name || ""}`.trim() || "-")}</td>
+        <td>${admin_escapeHtml(r.Scheduled_Start || "-")}</td>
+        <td>${admin_escapeHtml(r.Scheduled_End || "-")}</td>
+        <td>${admin_escapeHtml(r.Status || "-")}</td>
+      </tr>
+    `).join("");
+
+    wrap.innerHTML = `
+      <table class="admin-users-table">
+        <thead>
+          <tr>
+            <th>APPT ID</th>
+            <th>PATIENT</th>
+            <th>PROVIDER</th>
+            <th>START</th>
+            <th>END</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    console.error("Failed to load admin report:", err);
+    wrap.innerHTML = `<p>Unable to load appointment report data.</p>`;
+  }
 }
 
 /* -------------------------
