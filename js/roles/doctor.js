@@ -524,7 +524,13 @@ async function doc_saveExam(appointmentId, visitId, backTarget = "history", back
   await api("api/doctor/exam_save.php", "POST", payload);
   toast("Visit Completed", "Exam and medication updates saved.", "ok");
 
-  await doc_openExamPage(appointmentId, backTarget, backPatientId, true);
+  // Return doctor to dashboard so the completed visit leaves the active workflow
+  loadDoctor();
+
+  // Force a fresh reload of tiles/queue/schedule after save
+  setTimeout(() => {
+    doc_refreshDay();
+  }, 100);
 }
 let docMedications = [];
 
