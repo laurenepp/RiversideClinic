@@ -34,7 +34,6 @@ function buildMenu(role) {
       <button class="nav-btn" onclick="nurse_home()">Dashboard</button>
       <button class="nav-btn" onclick="nurseAppointments()">Appointments</button>
       <button class="nav-btn" onclick="nurse_schedule()">Schedules</button>
-      <button class="nav-btn" onclick="nurse_intake()">Patient Intake</button>
       <button class="nav-btn logout" onclick="doLogout()">Logout</button>
     `;
     return;

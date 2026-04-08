@@ -296,7 +296,15 @@ function renderDashboardShell(role) {
   }
 
   if (role === "nurse") {
-    nurse_home();
+    if (typeof nurse_home === "function") {
+      nurse_home();
+      return;
+    }
+
+    setView(`
+      <h2>Nurse Dashboard</h2>
+      <p>Nurse dashboard is loading.</p>
+    `);
     return;
   }
 
@@ -344,7 +352,6 @@ function doLogout() {
 }
 
 async function confirmLogout() {
-  // Clear the tab/window marker first.
   sessionStorage.removeItem(TAB_AUTH_KEY);
 
   try {
@@ -451,18 +458,6 @@ function doc_patientHistory() {
 // -----------------------------
 // Nurse Views
 // -----------------------------
-function nurse_home() {
-  if (typeof loadNurse === "function") {
-    loadNurse();
-    return;
-  }
-
-  setView(`
-    <h2>Nurse Dashboard</h2>
-    <p>Nurse dashboard is loading.</p>
-  `);
-}
-
 function nurse_patients() {
   setView(`
     <h2>Assigned Patients</h2>
