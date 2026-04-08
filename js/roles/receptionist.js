@@ -331,19 +331,71 @@ async function rx_billAndReschedule(appointmentId) {
 }
 
 async function rx_saveBillReschedule(appointmentId) {
+  const startRaw = document.getElementById("rx_next_start")?.value || "";
+  const endRaw = document.getElementById("rx_next_end")?.value || "";
+  const msg = document.getElementById("rx_checkout_msg");
+
   const payload = {
     appointmentId,
     amount: document.getElementById("rx_bill_amount")?.value || "0.00",
     billingStatus: document.getElementById("rx_bill_status")?.value || "UNPAID",
-    nextStart: (document.getElementById("rx_next_start")?.value || "").replace("T", " ") + ":00",
-    nextEnd: (document.getElementById("rx_next_end")?.value || "").replace("T", " ") + ":00"
+    nextStart: startRaw ? startRaw.replace("T", " ") + ":00" : "",
+    nextEnd: endRaw ? endRaw.replace("T", " ") + ":00" : ""
   };
-  const msg = document.getElementById("rx_checkout_msg");
-  if (msg) msg.textContent = "Saving checkout...";
-  await api("api/receptionist/billing_reschedule_save.php", "POST", payload);
-  toast("Checkout Complete", "Patient billed and next visit scheduled.", "ok");
-  rx_closeModal();
-  rx_loadTilesAndNext();
+
+  // 🔴 Validate before sending
+  if (!startRaw || !endRaw) {
+    if (msg) {
+      msg.innerHTML = `<div class="alert error">Next appointment start and end are required.</div>`;
+    }
+    return;
+  }
+
+  if (msg) {
+    msg.innerHTML = `<div class="hint">Saving checkout...</div>`;
+  }
+
+  try {
+    const result = await api("api/receptionist/billing_reschedule_save.php", "POST", payload);
+
+    //  SUCCESS MESSAGE (THIS IS YOUR UPGRADE)
+    if (msg) {
+      msg.innerHTML = `
+        <div class="alert success">
+          <strong>Success:</strong> Billing saved and next appointment scheduled.
+          <div style="margin-top:6px;">
+            New Appointment ID: <strong>${result.nextAppointmentId}</strong>
+          </div>
+        </div>
+      `;
+    }
+
+    //  Toast popup
+    toast(
+      "Checkout Complete",
+      `Patient billed and next appointment #${result.nextAppointmentId} created.`,
+      "ok"
+    );
+
+    //  Let user SEE success before closing
+    setTimeout(() => {
+      rx_closeModal();
+      rx_loadTilesAndNext();
+
+      if (typeof appointmentsLoadData === "function") {
+        appointmentsLoadData();
+      }
+    }, 1200);
+
+  } catch (err) {
+    const errorText = err?.message || err?.error || "Unable to bill and reschedule patient.";
+
+    if (msg) {
+      msg.innerHTML = `<div class="alert error">${errorText}</div>`;
+    }
+
+    toast("Error", errorText, "error");
+  }
 }
 
 function loadReceptionistPatientCreate() {
