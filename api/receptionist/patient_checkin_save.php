@@ -1,3 +1,4 @@
+
 <?php
 require_once "../utils.php";
 require_role("Receptionist");
@@ -38,7 +39,7 @@ try {
     ]);
 
     if ($insuranceProvider !== '' || $policyNumber !== '' || $policyHolder !== '') {
-        $stmt = $pdo->prepare("SELECT Insurance_ID FROM Insurance_Info WHERE Patient_ID = ? ORDER BY Updated_At DESC, Insurance_ID DESC LIMIT 1");
+        $stmt = $pdo->prepare("SELECT Insurance_ID FROM Insurance_Info WHERE Patient_ID = ? ORDER BY Insurance_ID DESC LIMIT 1");
         $stmt->execute([$patientId]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -65,13 +66,40 @@ try {
         }
     }
 
-    $stmt = $pdo->prepare("UPDATE Appointment SET Status = 'CHECKED_IN' WHERE Appointment_ID = ?");
-    $stmt->execute([$appointmentId]);
+    $stmt = $pdo->prepare("
+    UPDATE Appointment
+    SET Status = 'CHECKED_IN'
+    WHERE Appointment_ID = ?
+");
+$stmt->execute([$appointmentId]);
 
-    $pdo->commit();
-    echo json_encode(["success" => true]);
+$currentUserId = 1002;
+
+$stmt = $pdo->prepare("
+    INSERT INTO Visit (
+        Created_By_User_ID,
+        Appointment_ID,
+        Patient_ID,
+        Provider_User_ID,
+        Visit_Date_Time,
+        Doctor_Case_Status
+    )
+    SELECT
+        ?, Appointment_ID, Patient_ID, Provider_User_ID, NOW(), 'OPEN'
+    FROM Appointment
+    WHERE Appointment_ID = ?
+");
+$stmt->execute([$currentUserId, $appointmentId]);
+
+$pdo->commit();
+echo json_encode(["success" => true]);
+
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     http_response_code(500);
-    echo json_encode(["error" => "Failed to complete check in", "details" => $e->getMessage()]);
+   echo json_encode([
+    "error" => "Failed to complete check in",
+    "details" => $e->getMessage(),
+    "trace" => $e->getTraceAsString()
+]);
 }
