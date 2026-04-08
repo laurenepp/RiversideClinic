@@ -575,7 +575,6 @@ function doc_removeMedication(index) {
 }
 
 window.doc_openPatient = doc_openPatient;
-window.doc_open = doc_open;
 window.loadDoctorPatientHistory = loadDoctorPatientHistory;
 window.loadDoctorAppointments = loadDoctorAppointments;
 window.doc_home = doc_home;

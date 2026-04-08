@@ -74,7 +74,9 @@ async function start() {
     renderDashboardShell(role);
 
     if (user.mustChangePassword) {
-      showFirstLoginPasswordModal();
+      setTimeout(() => {
+        showFirstLoginPasswordModal();
+      }, 150);
     }
   } catch (err) {
     showLogin();
@@ -170,25 +172,76 @@ function showFirstLoginPasswordModal() {
 
   const overlay = document.createElement("div");
   overlay.id = "first-login-password-overlay";
+
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.right = "0";
+  overlay.style.bottom = "0";
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0, 0, 0, 0.55)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "999999";
+  overlay.style.padding = "20px";
+  overlay.style.boxSizing = "border-box";
+
   overlay.innerHTML = `
-    <div class="first-login-password-modal">
-      <h2>Change Temporary Password</h2>
-      <p>This is your first login. You must create a new password before continuing.</p>
+    <div id="first-login-password-modal-box" style="
+      background: #ffffff;
+      color: #111827;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      font-family: Arial, sans-serif;
+    ">
+      <h2 style="margin-top:0; margin-bottom:10px;">Change Temporary Password</h2>
+      <p style="margin-top:0; margin-bottom:16px;">
+        This is your first login. You must create a new password before continuing.
+      </p>
 
-      <label for="firstLoginNewPassword">New Password</label>
-      <input id="firstLoginNewPassword" type="password">
+      <label for="firstLoginNewPassword" style="display:block; margin-top:12px; font-weight:600;">New Password</label>
+      <input id="firstLoginNewPassword" type="password" style="
+        width:100%;
+        margin-top:6px;
+        margin-bottom:12px;
+        padding:10px;
+        box-sizing:border-box;
+        border:1px solid #cbd5e1;
+        border-radius:8px;
+      ">
 
-      <label for="firstLoginConfirmPassword">Confirm New Password</label>
-      <input id="firstLoginConfirmPassword" type="password">
+      <label for="firstLoginConfirmPassword" style="display:block; font-weight:600;">Confirm New Password</label>
+      <input id="firstLoginConfirmPassword" type="password" style="
+        width:100%;
+        margin-top:6px;
+        margin-bottom:12px;
+        padding:10px;
+        box-sizing:border-box;
+        border:1px solid #cbd5e1;
+        border-radius:8px;
+      ">
 
-      <div id="firstLoginPasswordMsg" class="first-login-password-msg"></div>
+      <div id="firstLoginPasswordMsg" style="margin-bottom:12px; color:#b91c1c; min-height:20px;"></div>
 
-      <p class="first-login-password-help">
+      <p style="font-size:14px; margin-bottom:16px; line-height:1.4;">
         Password must be at least 8 characters and include:
         1 uppercase letter, 1 lowercase letter, and 1 special character.
       </p>
 
-      <button onclick="submitFirstLoginPasswordChange()">Save New Password</button>
+      <button onclick="submitFirstLoginPasswordChange()" style="
+        width:100%;
+        padding:12px;
+        cursor:pointer;
+        border:none;
+        border-radius:8px;
+      ">
+        Save New Password
+      </button>
     </div>
   `;
 
@@ -235,14 +288,20 @@ async function submitFirstLoginPasswordChange() {
       confirmPassword
     });
 
-    if (msg) msg.innerHTML = "Password updated";
+    if (msg) {
+      msg.style.color = "#166534";
+      msg.innerHTML = "Password updated";
+    }
 
     setTimeout(() => {
       document.getElementById("first-login-password-overlay")?.remove();
       location.reload();
     }, 500);
   } catch (err) {
-    if (msg) msg.innerHTML = err?.error || err || "Unable to update password";
+    if (msg) {
+      msg.style.color = "#b91c1c";
+      msg.innerHTML = err?.error || err || "Unable to update password";
+    }
   }
 }
 
