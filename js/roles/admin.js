@@ -27,14 +27,14 @@ function loadAdmin() {
 
         <div class="admin-card">
           <h3>Staff On Duty</h3>
-          <p>-</p>
-          <span>Doctors, nurses, and front desk</span>
+          <p id="admin_staff_on_duty">-</p>
+          <span>Providers scheduled today</span>
         </div>
 
         <div class="admin-card">
           <h3>System Alerts</h3>
-          <p>-</p>
-          <span>Items needing attention</span>
+          <p id="admin_system_alerts">-</p>
+          <span>Critical and warning events</span>
         </div>
       </div>
 
@@ -50,12 +50,15 @@ function loadAdmin() {
         </div>
 
         <div class="admin-panel-box">
-          <h3>Recent Activity</h3>
-          <ul class="admin-activity-list">
-            <li>System activity will display when backend logging is connected</li>
-            <li>User actions will appear once Admin APIs are complete</li>
-            <li>Reports will use live clinic data after backend integration</li>
-            <li>Review access control and audit events regularly</li>
+          <div class="section-title">
+            <h3>Recent Activity</h3>
+            <div class="tools">
+              <button class="ghost" type="button" onclick="admin_showEventLogs()">View All</button>
+            </div>
+          </div>
+
+          <ul class="admin-activity-list" id="adminRecentActivityList">
+            <li>Loading recent activity...</li>
           </ul>
         </div>
       </div>
@@ -68,6 +71,9 @@ function loadAdmin() {
 
   admin_loadTiles();
   loadAdminSummary();
+  admin_loadRecentActivity(); // 🔴 NEW CALL
+  admin_loadSystemAlerts();
+  admin_loadStaffOnDuty();
 }
 
 async function loadAdminSummary() {
@@ -89,6 +95,106 @@ async function loadAdminSummary() {
     }
   } catch (err) {
     console.error("Admin summary load failed:", err);
+  }
+}
+
+async function admin_loadRecentActivity() {
+  const list = document.getElementById("adminRecentActivityList");
+  if (!list) return;
+
+  try {
+    const res = await fetch("api/admin/event_logs.php");
+
+    if (!res.ok) {
+      throw new Error("Failed to load recent activity");
+    }
+
+    const data = await res.json();
+    const logs = Array.isArray(data) ? data.slice(0, 5) : [];
+
+    if (!logs.length) {
+      list.innerHTML = `<li>No recent activity found.</li>`;
+      return;
+    }
+
+    list.innerHTML = logs.map(log => {
+      const action = admin_escapeHtml(log.Action_Type || "Activity");
+      const details = admin_escapeHtml(log.Details || "");
+      const date = admin_escapeHtml(log.Audit_Date || "");
+
+      return `
+        <li>
+          <strong>${action}</strong>
+          ${details ? `<div>${details}</div>` : ""}
+          <div style="font-size:12px; opacity:0.7;">${date}</div>
+        </li>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error("Recent activity load failed:", err);
+    list.innerHTML = `<li>Unable to load recent activity.</li>`;
+  }
+}
+
+async function admin_loadSystemAlerts() {
+  const el = document.getElementById("admin_system_alerts");
+  if (!el) return;
+
+  try {
+    const res = await fetch("api/admin/event_logs.php");
+
+    if (!res.ok) {
+      throw new Error("Failed to load system alerts");
+    }
+
+    const data = await res.json();
+    const logs = Array.isArray(data) ? data : [];
+
+    const alertCount = logs.filter(log => {
+      const severity = String(log.Severity || log.severity || "").toLowerCase();
+      return severity === "critical" || severity === "warning";
+    }).length;
+
+    el.innerText = alertCount === 0 ? "None" : alertCount;
+
+if (alertCount > 0) {
+  el.style.color = "#dc2626"; // red
+  el.style.fontWeight = "bold";
+} else {
+  el.style.color = "";
+  el.style.fontWeight = "";
+}
+  } catch (err) {
+    console.error("System alerts load failed:", err);
+    el.innerText = "-";
+  }
+}
+
+async function admin_loadStaffOnDuty() {
+  const el = document.getElementById("admin_staff_on_duty");
+  if (!el) return;
+
+  try {
+    const data = await api("api/shared/schedules_list.php");
+    const schedules = Array.isArray(data?.schedules) ? data.schedules : [];
+
+    const jsDay = new Date().getDay(); // 0=Sunday ... 6=Saturday
+    const appDay = jsDay + 1; // app uses 1=Sunday ... 7=Saturday
+
+    const todaySchedules = schedules.filter(s => Number(s.Day_Of_The_Week) === appDay);
+
+    const uniqueProviders = new Set(
+      todaySchedules.map(s => String(s.Provider_User_ID || s.User_ID || ""))
+    );
+
+    uniqueProviders.delete("");
+
+    const count = uniqueProviders.size;
+
+    el.innerText = count === 0 ? "None" : count;
+  } catch (err) {
+    console.error("Staff on duty load failed:", err);
+    el.innerText = "-";
   }
 }
 
