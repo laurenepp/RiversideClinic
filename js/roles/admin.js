@@ -349,8 +349,8 @@ function admin_renderUsersTable(users) {
       </td>
       <td>${u.Last_Login_At || "-"}</td>
       <td class="admin-actions-cell">
-        <button class="small ghost" type="button" disabled>Edit</button>
-        <button class="small secondary" type="button" disabled>
+        <button class="small ghost" type="button" onclick="admin_editUser(${Number(u.User_ID)})">Edit</button>
+        <button class="small secondary" type="button" onclick="admin_toggleDisable(${Number(u.User_ID)}, ${Number(u.Is_Disabled) ? 0 : 1})">
           ${Number(u.Is_Disabled) ? "Enable" : "Disable"}
         </button>
       </td>
@@ -476,8 +476,153 @@ async function admin_createUser() {
   }
 }
 
+function admin_editUser(userId) {
+  const user = (adminUsersData || []).find(u => Number(u.User_ID) === Number(userId));
+  if (!user) return;
+
+  const oldModal = document.getElementById("adminEditModal");
+  if (oldModal) oldModal.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "adminEditModal";
+  modal.innerHTML = `
+    <div style="
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    ">
+      <div style="
+        background: #fff;
+        width: 100%;
+        max-width: 700px;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        max-height: 90vh;
+        overflow-y: auto;
+      ">
+        <div class="section-title">
+          <h3>Edit User</h3>
+          <div class="tools">
+            <button class="ghost" type="button" onclick="admin_closeEditModal()">Close</button>
+          </div>
+        </div>
+
+        <div class="card form-grid">
+          <input id="eu_first" placeholder="First Name" value="${admin_escapeHtml(user.First_Name || "")}">
+          <input id="eu_last" placeholder="Last Name" value="${admin_escapeHtml(user.Last_Name || "")}">
+
+          <input id="eu_email" placeholder="Email" value="${admin_escapeHtml(user.Email || "")}">
+          <input id="eu_phone" placeholder="Phone" value="${admin_escapeHtml(user.Phone_Number || "")}">
+
+          <select id="eu_role">
+            <option value="Administrator" ${user.Role_Name === "Administrator" ? "selected" : ""}>Administrator</option>
+            <option value="Doctor" ${user.Role_Name === "Doctor" ? "selected" : ""}>Doctor</option>
+            <option value="Nurse" ${user.Role_Name === "Nurse" ? "selected" : ""}>Nurse</option>
+            <option value="Receptionist" ${user.Role_Name === "Receptionist" ? "selected" : ""}>Receptionist</option>
+          </select>
+
+          <input id="eu_password" type="password" placeholder="New Temporary Password">
+          <input id="eu_password_confirm" type="password" placeholder="Confirm New Password">
+
+          <button class="primary" type="button" onclick="admin_updateUser(${Number(user.User_ID)})">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+async function admin_toggleDisable(userId, isDisabled) {
+  try {
+    const res = await fetch("api/admin/users_disable.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userId: Number(userId),
+        isDisabled: Number(isDisabled) ? 1 : 0
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to update user status");
+    }
+
+    if (typeof toast === "function") {
+      toast(
+        "Success",
+        Number(isDisabled) ? "User disabled." : "User enabled.",
+        "ok"
+      );
+    }
+
+    admin_loadUsers();
+    admin_closeEditModal();
+  } catch (err) {
+    console.error("Disable/Enable error:", err);
+
+    if (typeof toast === "function") {
+      toast("Error", err.message || "Unable to update user.", "err");
+    }
+  }
+}
+
 async function admin_updateUser(userId) {
-  // backend not connected yet
+  const password = document.getElementById("eu_password")?.value || "";
+  const confirm = document.getElementById("eu_password_confirm")?.value || "";
+
+  if (password !== "" && password !== confirm) {
+    alert("Passwords do not match.");
+    return;
+  }
+
+  const payload = {
+    userId: Number(userId),
+    firstName: document.getElementById("eu_first")?.value.trim() || "",
+    lastName: document.getElementById("eu_last")?.value.trim() || "",
+    email: document.getElementById("eu_email")?.value.trim() || "",
+    phone: document.getElementById("eu_phone")?.value.trim() || "",
+    roleName: document.getElementById("eu_role")?.value.trim() || "",
+    password
+  };
+
+  try {
+    const res = await fetch("api/admin/users_update.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Update failed");
+    }
+
+    alert(
+      data.passwordReset
+        ? "User updated and password reset."
+        : "User updated successfully."
+    );
+
+    admin_closeEditModal();
+    admin_loadUsers();
+  } catch (err) {
+    console.error("Update error:", err);
+    alert(err.message || "Unable to update user.");
+  }
 }
 
 /* -------------------------
@@ -1262,3 +1407,8 @@ async function admin_deleteSchedule(scheduleId) {
     throw err;
   }
 }
+
+window.admin_closeEditModal = function () {
+  const modal = document.getElementById("adminEditModal");
+  if (modal) modal.remove();
+};
