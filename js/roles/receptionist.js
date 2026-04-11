@@ -95,15 +95,15 @@ async function rx_loadTilesAndNext(){
   `;
 
   const scheduledRows = (d.scheduledQueue || []).map(a => `
-    <tr>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${a.Patient_Last}, ${a.Patient_First}</td>
-      <td>${a.Date_Of_Birth || ""}</td>
-      <td>Dr. ${a.Provider_Last}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
-      <td><button class="small gold" onclick="rx_openCheckIn(${a.Appointment_ID})">Check In</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${fmtDT(a.Scheduled_Start)}</td>
+    <td>${escapeHtml(a.Patient_Last || "")}, ${escapeHtml(a.Patient_First || "")}</td>
+    <td>${escapeHtml(a.Date_Of_Birth || "")}</td>
+    <td>Dr. ${escapeHtml(a.Provider_Last || "")}</td>
+    <td><span class="${badgeClass(a.Status)}">${escapeHtml(a.Status || "")}</span></td>
+    <td><button class="small gold" onclick="rx_openCheckIn(${a.Appointment_ID})">Check In</button></td>
+  </tr>
+`).join("");
 
   nextWrap.innerHTML = `
     <div class="section">
@@ -127,14 +127,14 @@ async function rx_loadTilesAndNext(){
   `;
 
   const completedRows = (d.checkoutQueue || []).map(a => `
-    <tr>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${a.Patient_Last}, ${a.Patient_First}</td>
-      <td>Dr. ${a.Provider_Last}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
-      <td><button class="small primary" onclick="rx_billAndReschedule(${a.Appointment_ID})">Bill / Reschedule</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${fmtDT(a.Scheduled_Start)}</td>
+    <td>${escapeHtml(a.Patient_Last || "")}, ${escapeHtml(a.Patient_First || "")}</td>
+    <td>Dr. ${escapeHtml(a.Provider_Last || "")}</td>
+    <td><span class="${badgeClass(a.Status)}">${escapeHtml(a.Status || "")}</span></td>
+    <td><button class="small primary" onclick="rx_billAndReschedule(${a.Appointment_ID})">Bill / Reschedule</button></td>
+  </tr>
+`).join("");
 
   checkoutWrap.innerHTML = `
     <div class="section">
@@ -168,20 +168,20 @@ async function rx_openCheckIn(appointmentId) {
     const a = data.appointment || {};
     const ins = data.insurance || {};
 
-    const patientId = a.Patient_ID || 0;
-    const patientName = `${a.Last_Name || ""}, ${a.First_Name || ""}`.trim().replace(/^,\s*/, "") || "Patient";
-    const dob = a.Date_Of_Birth || "";
-    const phone = a.Phone_Number || "";
+    const patientID = a.Patient_ID || 0;
+    const patientName = `${escapeHtml(a.Last_Name || "")}, ${escapeHtml(a.First_Name || "")}`.trim().replace(/^,\s*/, "") || "Patient";
+    const dob = escapeHtml(a.Date_Of_Birth || "");
+    const phone = escapeHtml(a.Phone_Number || "");
 
-    const addressLine1 = a.Address_Line1 || "";
-    const addressLine2 = a.Address_Line2 || "";
-    const city = a.City || "";
-    const state = a.State || "";
-    const postalCode = a.Postal_Code || "";
+    const addressLine1 = escapeHtml(a.Address_Line1 || "");
+    const addressLine2 = escapeHtml(a.Address_Line2 || "");
+    const city = escapeHtml(a.City || "");
+    const state = escapeHtml(a.State || "");
+    const postalCode = escapeHtml(a.Postal_Code || "");
 
-    const insuranceProvider = ins.Insurance_Provider || "";
-    const policyNumber = ins.Policy_Number || "";
-    const policyHolder = ins.Policy_Holder || "";
+    const insuranceProvider = escapeHtml(ins.Insurance_Provider || "");
+    const policyNumber = escapeHtml(ins.Policy_Number || "");
+    const policyHolder = escapeHtml(ins.Policy_Holder || "");
 
     rx_openModal(
       "Check In Patient",
@@ -540,15 +540,15 @@ async function rx_patientSearch(){
   const data = await api(`api/receptionist/patients_search.php?search=${encodeURIComponent(q)}`);
 
   const rows = data.patients.map(p => `
-    <tr>
-      <td>${p.Patient_ID}</td>
-      <td>${p.Last_Name}, ${p.First_Name}</td>
-      <td>${p.Phone_Number}</td>
-      <td>${p.Email ?? ""}</td>
-      <td>${p.Date_Of_Birth}</td>
-      <td><button class="small" onclick='rx_editPatient(${JSON.stringify(p)})'>Edit</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${p.Patient_ID}</td>
+    <td>${escapeHtml(p.Last_Name || "")}, ${escapeHtml(p.First_Name || "")}</td>
+    <td>${escapeHtml(p.Phone_Number || "")}</td>
+    <td>${escapeHtml(p.Email ?? "")}</td>
+    <td>${escapeHtml(p.Date_Of_Birth || "")}</td>
+    <td><button class="small" onclick='rx_editPatient(${JSON.stringify(p)})'>Edit</button></td>
+  </tr>
+`).join("");
 
   document.getElementById("rx_results").innerHTML = `
     <table>

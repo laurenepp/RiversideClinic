@@ -29,7 +29,19 @@ if ($appointmentId <= 0) {
   exit;
 }
 
-$stmt = $pdo->prepare("UPDATE Appointment SET Status=? WHERE Appointment_ID=?");
-$stmt->execute([$status, $appointmentId]);
+$user = require_role('Doctor');
+
+$stmt = $pdo->prepare(
+    'UPDATE Appointment 
+     SET Status=? 
+     WHERE Appointment_ID=? 
+     AND Provider_User_ID=?'
+);
+
+$stmt->execute([
+    $status,
+    $appointmentId,
+    (int)$user['id']
+]);
 
 echo json_encode(["success" => true]);

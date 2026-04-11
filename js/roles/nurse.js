@@ -48,13 +48,13 @@ async function nurse_loadTilesAndQueue() {
   `;
 
   const rows = queue.map(p => `
-    <tr>
-      <td>${p.Scheduled_Start ? fmtDT(p.Scheduled_Start) : ""}</td>
-      <td>${p.Patient_Last}, ${p.Patient_First}</td>
-      <td>${p.Date_Of_Birth || ""}</td>
-      <td><button class="small gold" onclick="nurse_openIntake(${p.Appointment_ID})">Complete Intake</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${p.Scheduled_Start ? fmtDT(p.Scheduled_Start) : ""}</td>
+    <td>${escapeHtml(p.Patient_Last || "")}, ${escapeHtml(p.Patient_First || "")}</td>
+    <td>${escapeHtml(p.Date_Of_Birth || "")}</td>
+    <td><button class="small gold" onclick="nurse_openIntake(${p.Appointment_ID})">Complete Intake</button></td>
+  </tr>
+`).join("");
 
   queueWrap.innerHTML = `
     <div class="section">
@@ -86,13 +86,13 @@ async function nurse_intake(appointmentId = null) {
       <h2>Patient Intake</h2>
       <p>${appointmentId ? `Working intake for appointment #${appointmentId}` : "Vitals, notes, and intake forms will appear here." }</p>
       ${appt ? `
-        <div class="form-grid" style="margin-top:12px;">
-          <div class="field"><label>Patient</label><input value="${appt.Patient_Last}, ${appt.Patient_First}" disabled></div>
-          <div class="field"><label>Date of Birth</label><input value="${appt.Date_Of_Birth || ''}" disabled></div>
-          <div class="field"><label>Phone</label><input value="${appt.Phone_Number || ''}" disabled></div>
-          <div class="field"><label>Status</label><input value="${appt.Status || ''}" disabled></div>
-        </div>` : ''}
-      <div id="nurse_intake_form" style="margin-top:18px;"></div>
+  <div class="form-grid" style="margin-top:12px;">
+    <div class="field"><label>Patient</label><input value="${escapeHtml(appt.Patient_Last || "")}, ${escapeHtml(appt.Patient_First || "")}" disabled></div>
+    <div class="field"><label>Date of Birth</label><input value="${escapeHtml(appt.Date_Of_Birth || "")}" disabled></div>
+    <div class="field"><label>Phone</label><input value="${escapeHtml(appt.Phone_Number || "")}" disabled></div>
+    <div class="field"><label>Status</label><input value="${escapeHtml(appt.Status || "")}" disabled></div>
+    </div>` : ''}
+    <div id="nurse_intake_form" style="margin-top:18px;"></div>
     </div>
   `;
 
@@ -106,21 +106,21 @@ async function nurse_renderIntakeForm(appointmentId) {
   const i = existing.intake || {};
 
   wrap.innerHTML = `
-    <div class="form-grid">
-      <div class="field"><label>Blood Pressure</label><input id="ni_bp" placeholder="120/80" value="${i.Blood_Pressure || ''}"></div>
-      <div class="field"><label>Pulse</label><input id="ni_pulse" placeholder="72" value="${i.Pulse || ''}"></div>
-      <div class="field"><label>Respiration</label><input id="ni_respiration" placeholder="16" value="${i.Respiration || ''}"></div>
-      <div class="field"><label>Temperature</label><input id="ni_temp" placeholder="98.6" value="${i.Temperature || ''}"></div>
-      <div class="field"><label>Oxygen Saturation</label><input id="ni_oxygen" placeholder="99%" value="${i.Oxygen_Saturation || ''}"></div>
-      <div class="field"><label>Height</label><input id="ni_height" placeholder="5'7&quot;" value="${i.Height || ''}"></div>
-      <div class="field"><label>Weight</label><input id="ni_weight" placeholder="160 lbs" value="${i.Weight || ''}"></div>
-      <div class="field"><label>Pain Level</label><input id="ni_pain" placeholder="0-10" value="${i.Pain_Level || ''}"></div>
-    </div>
+  <div class="form-grid">
+    <div class="field"><label>Blood Pressure</label><input id="ni_bp" placeholder="120/80" value="${escapeHtml(i.Blood_Pressure || "")}"></div>
+    <div class="field"><label>Pulse</label><input id="ni_pulse" placeholder="72" value="${escapeHtml(i.Pulse || "")}"></div>
+    <div class="field"><label>Respiration</label><input id="ni_respiration" placeholder="16" value="${escapeHtml(i.Respiration || "")}"></div>
+    <div class="field"><label>Temperature</label><input id="ni_temp" placeholder="98.6" value="${escapeHtml(i.Temperature || "")}"></div>
+    <div class="field"><label>Oxygen Saturation</label><input id="ni_oxygen" placeholder="99%" value="${escapeHtml(i.Oxygen_Saturation || "")}"></div>
+    <div class="field"><label>Height</label><input id="ni_height" placeholder="5'7&quot;" value="${escapeHtml(i.Height || "")}"></div>
+    <div class="field"><label>Weight</label><input id="ni_weight" placeholder="160 lbs" value="${escapeHtml(i.Weight || "")}"></div>
+    <div class="field"><label>Pain Level</label><input id="ni_pain" placeholder="0-10" value="${escapeHtml(i.Pain_Level || "")}"></div>
+  </div>
 
-    <div class="field" style="margin-top:14px;"><label>Nurse Intake Note</label><textarea id="ni_note" rows="4">${i.Nurse_Intake_Note || ''}</textarea></div>
-    <div class="field" style="margin-top:14px;"><label>Current Medications</label><textarea id="ni_meds" rows="3">${i.Current_Medications || ''}</textarea></div>
-    <div class="field" style="margin-top:14px;"><label>Medication Changes</label><textarea id="ni_med_changes" rows="3">${i.Medication_Changes || ''}</textarea></div>
-    <div class="field" style="margin-top:14px;"><label>Medication Notes</label><textarea id="ni_med_notes" rows="3">${i.Medication_Notes || ''}</textarea></div>
+  <div class="field" style="margin-top:14px;"><label>Nurse Intake Note</label><textarea id="ni_note" rows="4">${escapeHtml(i.Nurse_Intake_Note || "")}</textarea></div>
+  <div class="field" style="margin-top:14px;"><label>Current Medications</label><textarea id="ni_meds" rows="3">${escapeHtml(i.Current_Medications || "")}</textarea></div>
+  <div class="field" style="margin-top:14px;"><label>Medication Changes</label><textarea id="ni_med_changes" rows="3">${escapeHtml(i.Medication_Changes || "")}</textarea></div>
+  <div class="field" style="margin-top:14px;"><label>Medication Notes</label><textarea id="ni_med_notes" rows="3">${escapeHtml(i.Medication_Notes || "")}</textarea></div>
 
     <div class="row" style="margin-top:16px;">
       <button class="primary" onclick="nurse_saveIntake(${appointmentId})">Save Intake</button>

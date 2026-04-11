@@ -229,7 +229,12 @@ function renderAppointmentsDayGrid() {
         <div class="appt-grid" style="grid-template-columns: 120px repeat(${Math.max(visibleProviders.length, 1)}, 1fr);">
         <div class="appt-head appt-time-head">Time</div>
         ${visibleProviders.length
-            ? visibleProviders.map(p => `<div class="appt-head">Dr. ${p.Last_Name ? `${p.First_Name} ${p.Last_Name}` : p.First_Name}</div>`).join("")
+            ? visibleProviders.map(p => {
+    const providerName = p.Last_Name
+      ? `${escapeHtml(p.First_Name || "")} ${escapeHtml(p.Last_Name || "")}`.trim()
+      : escapeHtml(p.First_Name || "");
+    return `<div class="appt-head">Dr. ${providerName}</div>`;
+  }).join("")
             : `<div class="appt-head">No Providers</div>`}
     `;
 
@@ -249,13 +254,13 @@ function renderAppointmentsDayGrid() {
 
             if (appt) {
             const duration = appointmentsDurationMinutes(appt.Scheduled_Start, appt.Scheduled_End);
-            const patientName = `${appt.Patient_First} ${appt.Patient_Last}`;
+            const patientName = `${escapeHtml(appt.Patient_First || "")} ${escapeHtml(appt.Patient_Last || "")}`.trim();
             const tone = appointmentsTone(appt.Status);
 
             html += `
                 <div class="appt-card ${tone}" onclick="appointmentsView(${appt.Appointment_ID})" style="cursor:pointer;">
                 <div class="appt-patient">${patientName}</div>
-                <div class="appt-type">${appt.Status}</div>
+                <div class="appt-type">${escapeHtml(appt.Status || "")}</div>
                 <div class="appt-duration">${duration} min</div>
                 </div>
             `;
@@ -284,8 +289,8 @@ function appointmentsView(appointmentId) {
     return;
   }
 
-  const patientName = `${appt.Patient_First} ${appt.Patient_Last}`;
-  const providerName = `Dr. ${appt.Provider_First} ${appt.Provider_Last}`;
+  const patientName = `${escapeHtml(appt.Patient_First || "")} ${escapeHtml(appt.Patient_Last || "")}`.trim();
+  const providerName = `Dr. ${escapeHtml(appt.Provider_First || "")} ${escapeHtml(appt.Provider_Last || "")}`.trim();
 
   const modalRoot = document.getElementById("appt_modal_root");
   if (!modalRoot) return;
@@ -431,7 +436,7 @@ function appointmentsOpenNew() {
     appointmentsState.patientSearchResults = [];
 
   const providerOptions = (appointmentsState.providers || []).map(p =>
-    `<option value="${p.User_ID}">Dr. ${p.First_Name} ${p.Last_Name}</option>`
+    `<option value="${p.User_ID}">Dr. ${escapeHtml(p.First_Name || "")} ${escapeHtml(p.Last_Name || "")}</option>`
   ).join("");
 
   const defaultDate = formatAppointmentsDateInput(appointmentsState.selectedDate);
@@ -548,10 +553,10 @@ async function appointmentsPatientSearch() {
     const rows = patients.map(p => `
       <tr>
         <td>${p.Patient_ID}</td>
-        <td>${p.First_Name} ${p.Last_Name}</td>
-        <td>${p.Phone_Number || ""}</td>
-        <td>${p.Email || ""}</td>
-        <td>${p.Date_Of_Birth || ""}</td>
+        <td>${escapeHtml(p.First_Name || "")} ${escapeHtml(p.Last_Name || "")}</td>
+        <td>${escapeHtml(p.Phone_Number || "")}</td>
+        <td>${escapeHtml(p.Email || "")}</td>
+        <td>${escapeHtml(p.Date_Of_Birth || "")}</td>
         <td>
           <button class="small primary" onclick="appointmentsSelectPatient(${p.Patient_ID})">
             Select
@@ -601,7 +606,7 @@ function appointmentsSelectPatient(patientId) {
   if (selectedWrap) {
     selectedWrap.innerHTML = `
       <div class="ok">
-        Selected Patient: <strong>${patient.First_Name} ${patient.Last_Name}</strong>
+        Selected Patient: <strong>${escapeHtml(patient.First_Name || "")} ${escapeHtml(patient.Last_Name || "")}</strong>
         (ID: ${patient.Patient_ID})
       </div>
     `;
@@ -812,8 +817,8 @@ function renderAppointmentsForDay(dayObj, appointments) {
   }
 
   return dayAppointments.map(appt => {
-    const patientName = `${appt.Patient_First} ${appt.Patient_Last}`;
-    const providerName = `${appt.Provider_First} ${appt.Provider_Last}`;
+    const patientName = `${escapeHtml(appt.Patient_First || "")} ${escapeHtml(appt.Patient_Last || "")}`.trim();
+    const providerName = `${escapeHtml(appt.Provider_First || "")} ${escapeHtml(appt.Provider_Last || "")}`.trim();
     const tone = appointmentsTone(appt.Status);
     const start = appointmentsFormatTimeLabel(appt.Scheduled_Start);
     const end = appointmentsFormatTimeLabel(appt.Scheduled_End);
@@ -823,7 +828,7 @@ function renderAppointmentsForDay(dayObj, appointments) {
         <div class="appt-patient">${patientName}</div>
         <div class="appt-type">${start} - ${end}</div>
         ${appointmentsState.providerScope === "all" ? `<div class="appt-duration">Dr. ${providerName}</div>` : ""}
-        <div class="appt-duration">${appt.Status}</div>
+        <div class="appt-duration">${escapeHtml(appt.Status || "")}</div>
       </div>
     `;
   }).join("");

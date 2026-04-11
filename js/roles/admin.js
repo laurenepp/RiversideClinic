@@ -436,15 +436,15 @@ function admin_renderUsersTable(users) {
             ${((u.First_Name || "").charAt(0) + (u.Last_Name || "").charAt(0)).toUpperCase() || "U"}
           </div>
           <div class="admin-user-meta">
-            <div class="admin-user-name">${u.First_Name || ""} ${u.Last_Name || ""}</div>
-            <div class="admin-user-sub">${u.Email || ""}</div>
+            <div class="admin-user-name">${admin_escapeHtml(u.First_Name || "")} ${admin_escapeHtml(u.Last_Name || "")}</div>
+            <div class="admin-user-sub">${admin_escapeHtml(u.Email || "")}</div>
           </div>
         </div>
       </td>
       <td>
-        <span class="admin-role-pill role-${(u.Role_Name || "").toLowerCase()}">
-          ${(u.Role_Name || "").toLowerCase()}
-        </span>
+        <span class="admin-role-pill role-${admin_escapeHtml((u.Role_Name || "").toLowerCase())}">
+  ${admin_escapeHtml((u.Role_Name || "").toLowerCase())}
+</span>
       </td>
       <td>
         ${
@@ -453,7 +453,7 @@ function admin_renderUsersTable(users) {
             : `<span class="admin-status-pill active">active</span>`
         }
       </td>
-      <td>${u.Last_Login_At || "-"}</td>
+      <td>${admin_escapeHtml(u.Last_Login_At || "-")}</td>
       <td class="admin-actions-cell">
         <button class="small ghost" type="button" onclick="admin_editUser(${Number(u.User_ID)})">Edit</button>
         <button class="small secondary" type="button" onclick="admin_toggleDisable(${Number(u.User_ID)}, ${Number(u.Is_Disabled) ? 0 : 1})">
@@ -1404,7 +1404,7 @@ async function admin_loadProvidersForSchedule() {
     select.innerHTML = `
       <option value="">Select provider</option>
       ${providers.map(p => `
-        <option value="${p.User_ID}">Dr. ${p.First_Name} ${p.Last_Name}</option>
+        <option value="${p.User_ID}">Dr. ${admin_escapeHtml(p.First_Name || "")} ${admin_escapeHtml(p.Last_Name || "")}</option>
       `).join("")}
     `;
   } catch (err) {
@@ -1432,16 +1432,16 @@ async function admin_loadSchedules() {
     };
 
     const rows = schedules.map(s => `
-      <tr>
-        <td>Dr. ${s.First_Name} ${s.Last_Name}</td>
-        <td>${dayNames[Number(s.Day_Of_The_Week)] || s.Day_Of_The_Week}</td>
-        <td>${String(s.Start_Time).slice(0,5)}</td>
-        <td>${String(s.End_Time).slice(0,5)}</td>
-        <td>
-          <button class="small gold" onclick="admin_deleteSchedule(${s.Schedule_ID})">Delete</button>
-        </td>
-      </tr>
-    `).join("");
+  <tr>
+    <td>Dr. ${admin_escapeHtml(s.First_Name || "")} ${admin_escapeHtml(s.Last_Name || "")}</td>
+    <td>${admin_escapeHtml(dayNames[Number(s.Day_Of_The_Week)] || s.Day_Of_The_Week)}</td>
+    <td>${admin_escapeHtml(String(s.Start_Time || "").slice(0,5))}</td>
+    <td>${admin_escapeHtml(String(s.End_Time || "").slice(0,5))}</td>
+    <td>
+      <button class="small gold" onclick="admin_deleteSchedule(${s.Schedule_ID})">Delete</button>
+    </td>
+  </tr>
+`).join("");
 
     wrap.innerHTML = `
       <table>
