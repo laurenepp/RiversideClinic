@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . '/../../includes/db.php';
+
+require_once __DIR__ . '/../utils.php';
+require_role('Administrator');
 
 header('Content-Type: application/json');
 
