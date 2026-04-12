@@ -95,15 +95,15 @@ async function rx_loadTilesAndNext(){
   `;
 
   const scheduledRows = (d.scheduledQueue || []).map(a => `
-    <tr>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${a.Patient_Last}, ${a.Patient_First}</td>
-      <td>${a.Date_Of_Birth || ""}</td>
-      <td>Dr. ${a.Provider_Last}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
-      <td><button class="small gold" onclick="rx_openCheckIn(${a.Appointment_ID})">Check In</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${escapeHtml(fmtDT(a.Scheduled_Start) || "")}</td>
+    <td>${escapeHtml(a.Patient_Last || "")}, ${escapeHtml(a.Patient_First || "")}</td>
+    <td>${escapeHtml(a.Date_Of_Birth || "")}</td>
+    <td>Dr. ${escapeHtml(a.Provider_Last || "")}</td>
+    <td><span class="${badgeClass(a.Status)}">${escapeHtml(a.Status || "")}</span></td>
+    <td><button class="small gold" onclick="rx_openCheckIn(${Number(a.Appointment_ID)})">Check In</button></td>
+  </tr>
+`).join("");
 
   nextWrap.innerHTML = `
     <div class="section">
@@ -127,14 +127,14 @@ async function rx_loadTilesAndNext(){
   `;
 
   const completedRows = (d.checkoutQueue || []).map(a => `
-    <tr>
-      <td>${fmtDT(a.Scheduled_Start)}</td>
-      <td>${a.Patient_Last}, ${a.Patient_First}</td>
-      <td>Dr. ${a.Provider_Last}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
-      <td><button class="small admin-create-submit" onclick="rx_billAndReschedule(${a.Appointment_ID})">Bill / Reschedule</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${escapeHtml(fmtDT(a.Scheduled_Start) || "")}</td>
+    <td>${escapeHtml(a.Patient_Last || "")}, ${escapeHtml(a.Patient_First || "")}</td>
+    <td>Dr. ${escapeHtml(a.Provider_Last || "")}</td>
+    <td><span class="${badgeClass(a.Status)}">${escapeHtml(a.Status || "")}</span></td>
+    <td><button class="small admin-create-submit" onclick="rx_billAndReschedule(${Number(a.Appointment_ID)})">Bill / Reschedule</button></td>
+  </tr>
+`).join("");
 
   checkoutWrap.innerHTML = `
     <div class="section">
@@ -185,64 +185,64 @@ async function rx_openCheckIn(appointmentId) {
 
     rx_openModal(
       "Check In Patient",
-      `${patientName}${dob ? ` • DOB: ${dob}` : ""}`,
+      `${escapeHtml(patientName)}${dob ? ` • DOB: ${escapeHtml(dob)}` : ""}`,
       `
-        <input id="rx_patient_id" type="hidden" value="${patientId}">
+        <input id="rx_patient_id" type="hidden" value="${escapeHtml(String(patientId || ""))}">
 
         <div class="form-grid">
           <div class="field" style="grid-column:1 / -1;">
             <label>Full Name</label>
-            <input type="text" value="${patientName}" disabled>
+            <input type="text" value="${escapeHtml(patientName)}" disabled>
           </div>
 
           <div class="field">
             <label>Date of Birth</label>
-            <input type="text" value="${dob}" disabled>
+            <input type="text" value="${escapeHtml(dob)}" disabled>
           </div>
 
           <div class="field">
             <label>Phone Number</label>
-            <input id="rx_phone" type="text" value="${phone}">
+            <input id="rx_phone" type="text" value="${escapeHtml(phone)}">
           </div>
 
           <div class="field" style="grid-column:1 / -1;">
             <label>Address Line 1</label>
-            <input id="rx_address1" type="text" value="${addressLine1}">
+            <input id="rx_address1" type="text" value="${escapeHtml(addressLine1)}">
           </div>
 
           <div class="field" style="grid-column:1 / -1;">
             <label>Address Line 2</label>
-            <input id="rx_address2" type="text" value="${addressLine2}">
+            <input id="rx_address2" type="text" value="${escapeHtml(addressLine2)}">
           </div>
 
           <div class="field">
             <label>City</label>
-            <input id="rx_city" type="text" value="${city}">
+            <input id="rx_city" type="text" value="${escapeHtml(city)}">
           </div>
 
           <div class="field">
             <label>State</label>
-            <input id="rx_state" type="text" value="${state}">
+            <input id="rx_state" type="text" value="${escapeHtml(state)}">
           </div>
 
           <div class="field">
             <label>Postal Code</label>
-            <input id="rx_postal" type="text" value="${postalCode}">
+            <input id="rx_postal" type="text" value="${escapeHtml(postalCode)}">
           </div>
 
           <div class="field">
             <label>Insurance Provider</label>
-            <input id="rx_insurance_provider" type="text" value="${insuranceProvider}">
+            <input id="rx_insurance_provider" type="text" value="${escapeHtml(insuranceProvider)}">
           </div>
 
           <div class="field">
             <label>Policy Number</label>
-            <input id="rx_policy_number" type="text" value="${policyNumber}">
+            <input id="rx_policy_number" type="text" value="${escapeHtml(policyNumber)}">
           </div>
 
           <div class="field" style="grid-column:1 / -1;">
             <label>Policy Holder</label>
-            <input id="rx_policy_holder" type="text" value="${policyHolder}">
+            <input id="rx_policy_holder" type="text" value="${escapeHtml(policyHolder)}">
           </div>
         </div>
 
@@ -540,15 +540,15 @@ async function rx_patientSearch(){
   const data = await api(`api/receptionist/patients_search.php?search=${encodeURIComponent(q)}`);
 
   const rows = data.patients.map(p => `
-    <tr>
-      <td>${p.Patient_ID}</td>
-      <td>${p.Last_Name}, ${p.First_Name}</td>
-      <td>${p.Phone_Number}</td>
-      <td>${p.Email ?? ""}</td>
-      <td>${p.Date_Of_Birth}</td>
-      <td><button class="small admin-create-submit" onclick='rx_editPatient(${JSON.stringify(p)})'>Edit</button></td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${escapeHtml(String(p.Patient_ID || ""))}</td>
+    <td>${escapeHtml(p.Last_Name || "")}, ${escapeHtml(p.First_Name || "")}</td>
+    <td>${escapeHtml(p.Phone_Number || "")}</td>
+    <td>${escapeHtml(p.Email || "")}</td>
+    <td>${escapeHtml(p.Date_Of_Birth || "")}</td>
+    <td><button class="small admin-create-submit" onclick='rx_editPatient(${JSON.stringify(p)})'>Edit</button></td>
+  </tr>
+`).join("");
 
   document.getElementById("rx_results").innerHTML = `
     <table>
