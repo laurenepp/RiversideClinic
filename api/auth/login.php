@@ -62,6 +62,8 @@ if ((int)$user['Is_Disabled'] === 1) {
     exit;
 }
 
+session_regenerate_id(true);
+
 $_SESSION['user'] = [
     "id" => (int)$user['User_ID'],
     "name" => trim(($user['First_Name'] ?? '') . ' ' . ($user['Last_Name'] ?? '')),
