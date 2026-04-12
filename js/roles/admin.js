@@ -429,39 +429,21 @@ function admin_renderUsersTable(users) {
   }
 
   const rows = users.map(u => `
-    <tr>
-      <td>
-        <div class="admin-user-cell">
-          <div class="admin-user-avatar">
-            ${((u.First_Name || "").charAt(0) + (u.Last_Name || "").charAt(0)).toUpperCase() || "U"}
-          </div>
-          <div class="admin-user-meta">
-            <div class="admin-user-name">${u.First_Name || ""} ${u.Last_Name || ""}</div>
-            <div class="admin-user-sub">${u.Email || ""}</div>
-          </div>
-        </div>
-      </td>
-      <td>
-        <span class="admin-role-pill role-${(u.Role_Name || "").toLowerCase()}">
-          ${(u.Role_Name || "").toLowerCase()}
-        </span>
-      </td>
-      <td>
-        ${
-          Number(u.Is_Disabled)
-            ? `<span class="admin-status-pill locked">locked</span>`
-            : `<span class="admin-status-pill active">active</span>`
-        }
-      </td>
-      <td>${u.Last_Login_At || "-"}</td>
-      <td class="admin-actions-cell">
-        <button class="small ghost" type="button" onclick="admin_editUser(${Number(u.User_ID)})">Edit</button>
-        <button class="small secondary" type="button" onclick="admin_toggleDisable(${Number(u.User_ID)}, ${Number(u.Is_Disabled) ? 0 : 1})">
-          ${Number(u.Is_Disabled) ? "Enable" : "Disable"}
-        </button>
-      </td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${escapeHtml(((u.First_Name || "").charAt(0) + (u.Last_Name || "").charAt(0)).toUpperCase() || "U")}</td>
+    <td>${escapeHtml(u.First_Name || "")} ${escapeHtml(u.Last_Name || "")}</td>
+    <td>${escapeHtml(u.Email || "")}</td>
+    <td>${escapeHtml((u.Role_Name || "").toLowerCase())}</td>
+    <td>${Number(u.Is_Disabled) ? "locked" : "active"}</td>
+    <td>${escapeHtml(u.Last_Login_At || "-")}</td>
+    <td>
+      <button class="small admin-create-submit" onclick="admin_editUser(${Number(u.User_ID)})">Edit</button>
+      <button class="small ${Number(u.Is_Disabled) ? "gold" : "ghost"}" onclick="admin_toggleDisable(${Number(u.User_ID)}, ${Number(u.Is_Disabled) ? 0 : 1})">
+        ${Number(u.Is_Disabled) ? "Enable" : "Disable"}
+      </button>
+    </td>
+  </tr>
+`).join("");
 
   usersWrap.innerHTML = `
     <table class="admin-users-table">
@@ -1402,11 +1384,14 @@ async function admin_loadProvidersForSchedule() {
     const providers = data.providers || [];
 
     select.innerHTML = `
-      <option value="">Select provider</option>
-      ${providers.map(p => `
-        <option value="${p.User_ID}">Dr. ${p.First_Name} ${p.Last_Name}</option>
+  <option value="">Select provider</option>
+  ${providers.map(p => `
+    <option value="${escapeHtml(String(p.User_ID || ""))}">
+      Dr. ${escapeHtml(p.First_Name || "")} ${escapeHtml(p.Last_Name || "")}
+    </option>
       `).join("")}
-    `;
+      `;
+
   } catch (err) {
     select.innerHTML = `<option value="">Failed to load providers</option>`;
     throw err;
@@ -1432,16 +1417,16 @@ async function admin_loadSchedules() {
     };
 
     const rows = schedules.map(s => `
-      <tr>
-        <td>Dr. ${s.First_Name} ${s.Last_Name}</td>
-        <td>${dayNames[Number(s.Day_Of_The_Week)] || s.Day_Of_The_Week}</td>
-        <td>${String(s.Start_Time).slice(0,5)}</td>
-        <td>${String(s.End_Time).slice(0,5)}</td>
-        <td>
-          <button class="small gold" onclick="admin_deleteSchedule(${s.Schedule_ID})">Delete</button>
-        </td>
-      </tr>
-    `).join("");
+  <tr>
+    <td>Dr. ${escapeHtml(s.First_Name || "")} ${escapeHtml(s.Last_Name || "")}</td>
+    <td>${escapeHtml(dayNames[Number(s.Day_Of_The_Week)] || String(s.Day_Of_The_Week || ""))}</td>
+    <td>${escapeHtml(String(s.Start_Time || "").slice(0,5))}</td>
+    <td>${escapeHtml(String(s.End_Time || "").slice(0,5))}</td>
+    <td>
+      <button class="small gold" onclick="admin_deleteSchedule(${Number(s.Schedule_ID)})">Delete</button>
+    </td>
+  </tr>
+`).join("");
 
     wrap.innerHTML = `
       <table>
