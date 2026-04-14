@@ -8,16 +8,16 @@ function buildMenu(role) {
   menu.innerHTML = "";
 
   if (safeRole === "admin" || safeRole === "administrator") {
-    menu.innerHTML = `
-      <button class="nav-btn" onclick="admin_home()">Dashboard</button>
-      <button class="nav-btn" onclick="admin_users()">User Management</button>
-      <button class="nav-btn" onclick="admin_reports()">Appointments</button>
-      <button class="nav-btn" onclick="admin_settings()">Staff Scheduling</button>
-      <button class="nav-btn" onclick="admin_settings()">Clinic Hours</button>
-      <button class="nav-btn" onclick="doLogout()">Logout</button>
-    `;
-    return;
-  }
+  menu.innerHTML = `
+    <button class="nav-btn" onclick="admin_home()">Dashboard</button>
+    <button class="nav-btn" onclick="admin_users()">User Management</button>
+    <button class="nav-btn" onclick="admin_appointments()">Appointments</button>
+    <button class="nav-btn" onclick="admin_staff()">Staff Scheduling</button>
+    <button class="nav-btn" onclick="admin_clinicHours()">Clinic Hours</button>
+    <button class="nav-btn" onclick="doLogout()">Logout</button>
+  `;
+  return;
+}
 
   if (safeRole === "doctor") {
     menu.innerHTML = `

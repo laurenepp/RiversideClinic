@@ -431,12 +431,12 @@ function admin_renderUsersTable(users) {
 
   const rows = users.map(u => `
   <tr>
-    <td>${escapeHtml(((u.First_Name || "").charAt(0) + (u.Last_Name || "").charAt(0)).toUpperCase() || "U")}</td>
-    <td>${escapeHtml(u.First_Name || "")} ${escapeHtml(u.Last_Name || "")}</td>
-    <td>${escapeHtml(u.Email || "")}</td>
-    <td>${escapeHtml((u.Role_Name || "").toLowerCase())}</td>
+    <td>${admin_escapeHtml(((u.First_Name || "").charAt(0) + (u.Last_Name || "").charAt(0)).toUpperCase() || "U")}</td>
+    <td>${admin_escapeHtml(u.First_Name || "")} ${admin_escapeHtml(u.Last_Name || "")}</td>
+    <td>${admin_escapeHtml(u.Email || "")}</td>
+    <td>${admin_escapeHtml((u.Role_Name || "").toLowerCase())}</td>
     <td>${Number(u.Is_Disabled) ? "locked" : "active"}</td>
-    <td>${escapeHtml(u.Last_Login_At || "-")}</td>
+    <td>${admin_escapeHtml(u.Last_Login_At || "-")}</td>
     <td>
       <button class="small admin-create-submit" onclick="admin_editUser(${Number(u.User_ID)})">Edit</button>
       <button class="small ${Number(u.Is_Disabled) ? "gold" : "ghost"}" onclick="admin_toggleDisable(${Number(u.User_ID)}, ${Number(u.Is_Disabled) ? 0 : 1})">
@@ -1069,17 +1069,21 @@ function admin_exportEventLogsCSV() {
 
 function admin_showReports() {
   admin_clearEventLogsInterval();
-  admin_setActiveTab("users");
 
-  admin_panel(`
-    <div class="section-title">
-      <h3>Reporting - Appointments</h3>
-      <div class="tools">
-        <button class="ghost" onclick="admin_showUsers()">Back</button>
-      </div>
+  setView(`
+    <div class="page-header">
+      <h2>Appointment Reports</h2>
+      <p>Review appointment activity and reporting summaries.</p>
     </div>
 
-    <div class="card">
+    <div class="admin-panel-box">
+      <div class="section-title">
+        <h3>Reporting - Appointments</h3>
+        <div class="tools">
+          <button class="ghost" onclick="admin_home()">Back to Dashboard</button>
+        </div>
+      </div>
+
       <div class="row" style="gap:12px; flex-wrap:wrap; margin-bottom:12px;">
         <div class="field">
           <label for="adminReportDateFrom">From</label>
@@ -1410,11 +1414,11 @@ async function admin_loadProvidersForSchedule() {
     select.innerHTML = `
   <option value="">Select provider</option>
   ${providers.map(p => `
-    <option value="${escapeHtml(String(p.User_ID || ""))}">
-      Dr. ${escapeHtml(p.First_Name || "")} ${escapeHtml(p.Last_Name || "")}
+    <option value="${admin_escapeHtml(String(p.User_ID || ""))}">
+      Dr. ${admin_escapeHtml(p.First_Name || "")} ${admin_escapeHtml(p.Last_Name || "")}
     </option>
-      `).join("")}
-      `;
+  `).join("")}
+`;
 
   } catch (err) {
     select.innerHTML = `<option value="">Failed to load providers</option>`;
@@ -1442,10 +1446,10 @@ async function admin_loadSchedules() {
 
     const rows = schedules.map(s => `
   <tr>
-    <td>Dr. ${escapeHtml(s.First_Name || "")} ${escapeHtml(s.Last_Name || "")}</td>
-    <td>${escapeHtml(dayNames[Number(s.Day_Of_The_Week)] || String(s.Day_Of_The_Week || ""))}</td>
-    <td>${escapeHtml(String(s.Start_Time || "").slice(0,5))}</td>
-    <td>${escapeHtml(String(s.End_Time || "").slice(0,5))}</td>
+    <td>Dr. ${admin_escapeHtml(s.First_Name || "")} ${admin_escapeHtml(s.Last_Name || "")}</td>
+    <td>${admin_escapeHtml(dayNames[Number(s.Day_Of_The_Week)] || String(s.Day_Of_The_Week || ""))}</td>
+    <td>${admin_escapeHtml(String(s.Start_Time || "").slice(0,5))}</td>
+    <td>${admin_escapeHtml(String(s.End_Time || "").slice(0,5))}</td>
     <td>
       <button class="small gold" onclick="admin_deleteSchedule(${Number(s.Schedule_ID)})">Delete</button>
     </td>

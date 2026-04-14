@@ -416,8 +416,11 @@ function admin_users() {
 }
 
 function admin_reports() {
-  if (typeof admin_showReports === "function") {
-    admin_showReports();
+  if (typeof loadAdmin === "function" && typeof admin_showReports === "function") {
+    loadAdmin();
+    setTimeout(() => {
+      admin_showReports();
+    }, 0);
     return;
   }
 
