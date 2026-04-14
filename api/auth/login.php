@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once "../config.php";
+require_once "../utils.php";
 
 header('Content-Type: application/json');
 
@@ -47,6 +48,11 @@ $stmt->execute([$username]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user || !password_verify($password, $user['Password_Hash'])) {
+    audit_log('LOGIN_FAILED', [
+        'username' => $username,
+        'reason'   => 'invalid_credentials'
+    ], 'warning');
+
     http_response_code(401);
     echo json_encode([
         "error" => "Invalid login"
@@ -55,6 +61,12 @@ if (!$user || !password_verify($password, $user['Password_Hash'])) {
 }
 
 if ((int)$user['Is_Disabled'] === 1) {
+    audit_log('LOGIN_DISABLED', [
+        'username' => $username,
+        'user_id'  => (int)$user['User_ID'],
+        'reason'   => 'account_disabled'
+    ], 'warning');
+
     http_response_code(403);
     echo json_encode([
         "error" => "Account disabled"
@@ -71,4 +83,10 @@ $_SESSION['user'] = [
     "mustChangePassword" => ((int)$user['Must_Change_Password'] === 1)
 ];
 
+audit_log('LOGIN_SUCCESS', [
+    'username' => $username,
+    'must_change_password' => ((int)$user['Must_Change_Password'] === 1)
+], 'info');
+
 echo json_encode($_SESSION['user']);
+exit;

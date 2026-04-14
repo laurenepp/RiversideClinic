@@ -1,6 +1,7 @@
 // js/roles/admin.js
 
 let adminEventLogs = [];
+let adminFilteredEventLogs = [];
 let adminEventLogsInterval = null;
 let adminUsersData = [];
 
@@ -45,7 +46,7 @@ function loadAdmin() {
           <h3>Quick Actions</h3>
           <div class="quick-actions">
             <button class="admin-action-btn" onclick="admin_showUsers()">Manage Users</button>
-            <button class="admin-action-btn" onclick="admin_showReports()">Reports</button>
+            <button class="admin-action-btn" onclick="admin_showReports()">Appointment Reports</button>
           </div>
         </div>
 
@@ -110,7 +111,7 @@ async function admin_loadRecentActivity() {
     }
 
     const data = await res.json();
-    const logs = Array.isArray(data) ? data.slice(0, 5) : [];
+    const logs = Array.isArray(data) ? data.slice(0, 4) : [];
 
     if (!logs.length) {
       list.innerHTML = `<li>No recent activity found.</li>`;
@@ -743,7 +744,9 @@ function admin_showEventLogs() {
 
           <div class="field">
             <label>User</label>
-            <input id="adminLogUser" type="text" placeholder="Filter by user">
+            <select id="adminLogUser">
+              <option value="">All Users</option>
+            </select>
           </div>
 
           <div class="field">
@@ -817,7 +820,7 @@ function admin_showEventLogs() {
 
 async function admin_fetchEventLogs() {
   try {
-    const res = await fetch("api/admin/event_logs.php", {
+    const res = await fetch("api/admin/event_logs.php?hours=24", {
       method: "GET",
       headers: {
         "Accept": "application/json"
@@ -832,6 +835,7 @@ async function admin_fetchEventLogs() {
 
     adminEventLogs = Array.isArray(data) ? data : [];
     admin_populateEventActionOptions(adminEventLogs);
+    admin_populateEventUserOptions(adminEventLogs);
     admin_renderFilteredEventLogs();
   } catch (err) {
     console.error(err);
@@ -872,6 +876,25 @@ function admin_populateEventActionOptions(logs) {
   select.value = uniqueActions.includes(selected) ? selected : "";
 }
 
+function admin_populateEventUserOptions(logs) {
+  const select = document.getElementById("adminLogUser");
+  if (!select) return;
+
+  const selected = select.value || "";
+  const uniqueUsers = [...new Set(
+    logs
+      .map(log => String(log.user || "").trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+
+  select.innerHTML = `
+    <option value="">All Users</option>
+    ${uniqueUsers.map(user => `<option value="${admin_escapeHtml(user)}">${admin_escapeHtml(user)}</option>`).join("")}
+  `;
+
+  select.value = uniqueUsers.includes(selected) ? selected : "";
+}
+
 function admin_getFilteredEventLogs() {
   const actionType = (document.getElementById("adminLogActionType")?.value || "").trim();
   const user = (document.getElementById("adminLogUser")?.value || "").trim().toLowerCase();
@@ -886,7 +909,7 @@ function admin_getFilteredEventLogs() {
     const logDate = (log.date || "").slice(0, 10);
 
     const matchesAction = !actionType || logAction === actionType;
-    const matchesUser = !user || logUser.includes(user);
+    const matchesUser = !user || logUser === user;
     const matchesSeverity = !severity || logSeverity === severity;
     const matchesDateFrom = !dateFrom || logDate >= dateFrom;
     const matchesDateTo = !dateTo || logDate <= dateTo;
@@ -897,6 +920,7 @@ function admin_getFilteredEventLogs() {
 
 function admin_renderFilteredEventLogs() {
   const logs = admin_getFilteredEventLogs();
+  adminFilteredEventLogs = logs;
 
   const countText = document.getElementById("adminEventCountText");
   if (countText) {
@@ -1001,7 +1025,7 @@ function admin_renderEventLogsTable(logs) {
 }
 
 function admin_exportEventLogsCSV() {
-  const logs = admin_getFilteredEventLogs();
+  const logs = Array.isArray(adminFilteredEventLogs) ? adminFilteredEventLogs : [];
 
   if (!logs.length) {
     toast("Export CSV", "There are no event logs to export.", "warn");
