@@ -507,6 +507,365 @@ function rx_showPatientCreate() {
   `);
 }
 
+function rx_showPatientSearchInfo() {
+  const existing = document.getElementById("rxPatientInfoModal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "rxPatientInfoModal";
+  modal.innerHTML = `
+    <div
+      style="
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 24px;
+      "
+    >
+      <div
+        style="
+          background: #ffffff;
+          width: 100%;
+          max-width: 980px;
+          max-height: 90vh;
+          overflow-y: auto;
+          border-radius: 18px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+          padding: 24px;
+        "
+      >
+        <div class="card-header">
+          <h3>Search Patient Info</h3>
+          <p>Search by patient name and date of birth, review demographics, save updates, or create an appointment.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rx_search_info_name">Patient Name</label>
+            <input
+              type="text"
+              id="rx_search_info_name"
+              class="input"
+              placeholder="Enter first or last name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="rx_search_info_dob">Date of Birth</label>
+            <input
+              type="date"
+              id="rx_search_info_dob"
+              class="input"
+            />
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:16px;">
+          <button class="admin-create-submit" onclick="rx_runPatientSearchInfo()">Search</button>
+          <button class="small gold" onclick="rx_closePatientSearchInfoModal()">Close</button>
+        </div>
+
+        <div id="rx_search_info_msg" style="margin-top:16px;"></div>
+        <div id="rx_search_info_results" style="margin-top:16px;"></div>
+
+        <div id="rx_patient_info_editor" style="display:none; margin-top:24px;">
+          <h3>Patient Demographics</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rx_info_first_name">First Name</label>
+              <input type="text" id="rx_info_first_name" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="rx_info_last_name">Last Name</label>
+              <input type="text" id="rx_info_last_name" class="input" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rx_info_phone">Phone</label>
+              <input type="text" id="rx_info_phone" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="rx_info_email">Email</label>
+              <input type="text" id="rx_info_email" class="input" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rx_info_dob">Date of Birth</label>
+              <input type="date" id="rx_info_dob" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="rx_info_address1">Address Line 1</label>
+              <input type="text" id="rx_info_address1" class="input" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rx_info_address2">Address Line 2</label>
+              <input type="text" id="rx_info_address2" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="rx_info_city">City</label>
+              <input type="text" id="rx_info_city" class="input" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rx_info_state">State</label>
+              <input type="text" id="rx_info_state" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="rx_info_postal">Postal Code</label>
+              <input type="text" id="rx_info_postal" class="input" />
+            </div>
+          </div>
+
+          <input type="hidden" id="rx_info_patient_id" />
+
+          <div id="rx_patient_info_save_msg" style="margin-top:16px;"></div>
+
+          <div class="form-actions" style="margin-top:20px;">
+            <button class="admin-create-submit" onclick="rx_savePatientInfo()">Save Changes</button>
+            <button class="admin-create-submit" onclick="rx_createAppointmentFromPatientInfo()">Create Appointment</button>
+            <button class="small gold" onclick="rx_closePatientSearchInfoModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+async function rx_runPatientSearchInfo() {
+  const rawName = document.getElementById("rx_search_info_name")?.value.trim() || "";
+  const dob = document.getElementById("rx_search_info_dob")?.value || "";
+
+  const msg = document.getElementById("rx_search_info_msg");
+  const results = document.getElementById("rx_search_info_results");
+
+  if (msg) msg.innerHTML = "";
+  if (results) results.innerHTML = "";
+
+  if (!rawName && !dob) {
+    if (msg) {
+      msg.innerHTML = `<p style="color:red;">Enter a patient name or date of birth to search.</p>`;
+    }
+    return;
+  }
+
+  if (!rawName && dob) {
+    if (msg) {
+      msg.innerHTML = `<p style="color:red;">Please enter at least a first or last name. Date of birth is used as a filter after name search.</p>`;
+    }
+    return;
+  }
+
+  try {
+    const terms = rawName.split(/\s+/).filter(Boolean);
+    const queries = terms.length ? terms : [rawName];
+
+    const patientMap = new Map();
+
+    for (const q of queries) {
+      const data = await api(`api/receptionist/patients_search.php?search=${encodeURIComponent(q)}`);
+      const list = Array.isArray(data?.patients) ? data.patients : [];
+
+      list.forEach(p => {
+        const id = Number(p.Patient_ID || 0);
+        if (id > 0 && !patientMap.has(id)) {
+          patientMap.set(id, p);
+        }
+      });
+    }
+
+    let patients = Array.from(patientMap.values());
+
+    if (dob) {
+      patients = patients.filter(p => (p.Date_Of_Birth || "") === dob);
+    }
+
+    if (!patients.length) {
+      if (msg) {
+        msg.innerHTML = `<p>No patients found.</p>`;
+      }
+      return;
+    }
+
+    const rows = patients.map(p => {
+  const fullName = `${p.Last_Name || ""}, ${p.First_Name || ""}`.replace(/^,\s*|\s*,\s*$/g, "");
+  const patientId = Number(p.Patient_ID || 0);
+
+  return `
+    <tr>
+      <td>${escapeHtml(fullName)}</td>
+      <td>${escapeHtml(p.Date_Of_Birth || "")}</td>
+      <td>${escapeHtml(p.Phone_Number || "")}</td>
+      <td>
+        <button class="small admin-create-submit" onclick="rx_loadPatientInfo(${patientId})">
+          Select
+        </button>
+      </td>
+    </tr>
+  `;
+}).join("");
+
+    results.innerHTML = `
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>DOB</th>
+            <th>Phone</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    console.error(err);
+    if (msg) {
+      msg.innerHTML = `<p style="color:red;">${err.message || "Unable to search patients."}</p>`;
+    }
+  }
+}
+
+function rx_closePatientSearchInfoModal() {
+  const modal = document.getElementById("rxPatientInfoModal");
+  if (modal) modal.remove();
+}
+
+async function rx_loadPatientInfo(patientId) {
+  const msg = document.getElementById("rx_search_info_msg");
+  const saveMsg = document.getElementById("rx_patient_info_save_msg");
+  const editor = document.getElementById("rx_patient_info_editor");
+
+  if (msg) msg.innerHTML = "";
+  if (saveMsg) saveMsg.innerHTML = "";
+
+  try {
+    const data = await api(`api/receptionist/patient_info_get.php?patientId=${encodeURIComponent(patientId)}`);
+
+    const patient = data?.patient || null;
+    if (!patient) {
+      if (msg) {
+        msg.innerHTML = `<p style="color:red;">Patient details could not be loaded.</p>`;
+      }
+      return;
+    }
+
+    const setVal = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.value = value ?? "";
+    };
+
+    setVal("rx_info_patient_id", patient.Patient_ID);
+    setVal("rx_info_first_name", patient.First_Name);
+    setVal("rx_info_last_name", patient.Last_Name);
+    setVal("rx_info_phone", patient.Phone_Number);
+    setVal("rx_info_email", patient.Email);
+    setVal("rx_info_dob", patient.Date_Of_Birth);
+    setVal("rx_info_address1", patient.Address_Line1);
+    setVal("rx_info_address2", patient.Address_Line2);
+    setVal("rx_info_city", patient.City);
+    setVal("rx_info_state", patient.State);
+    setVal("rx_info_postal", patient.Postal_Code);
+
+    if (editor) {
+      editor.style.display = "block";
+      editor.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  } catch (err) {
+    console.error(err);
+    if (msg) {
+      msg.innerHTML = `<p style="color:red;">${err.message || "Unable to load patient details."}</p>`;
+    }
+  }
+}
+
+async function rx_savePatientInfo() {
+  const saveMsg = document.getElementById("rx_patient_info_save_msg");
+  if (saveMsg) saveMsg.innerHTML = "";
+
+  const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
+
+  const payload = {
+    patientId: Number(document.getElementById("rx_info_patient_id")?.value || 0),
+    firstName: getVal("rx_info_first_name"),
+    lastName: getVal("rx_info_last_name"),
+    phone: getVal("rx_info_phone"),
+    email: getVal("rx_info_email"),
+    dob: document.getElementById("rx_info_dob")?.value || ""
+  };
+
+  if (!payload.patientId || !payload.firstName || !payload.lastName || !payload.phone || !payload.dob) {
+    if (saveMsg) {
+      saveMsg.innerHTML = `<p style="color:red;">First name, last name, phone, and date of birth are required.</p>`;
+    }
+    return;
+  }
+
+  try {
+    const result = await api("api/receptionist/patients_update.php", "POST", payload);
+
+    if (saveMsg) {
+      saveMsg.innerHTML = `<p style="color:green;">Patient information updated successfully.</p>`;
+    }
+
+    return result;
+  } catch (err) {
+    console.error(err);
+    if (saveMsg) {
+      saveMsg.innerHTML = `<p style="color:red;">${err.message || "Unable to save patient information."}</p>`;
+    }
+  }
+}
+
+function rx_createAppointmentFromPatientInfo() {
+  const patientId = Number(document.getElementById("rx_info_patient_id")?.value || 0);
+  const first = document.getElementById("rx_info_first_name")?.value || "";
+  const last = document.getElementById("rx_info_last_name")?.value || "";
+
+  if (!patientId) {
+    alert("No patient selected.");
+    return;
+  }
+
+  // Close the modal first
+  rx_closePatientSearchInfoModal();
+
+  // Open your existing appointment page
+  receptionistAppointments();
+
+  // Small delay to let the page render
+  setTimeout(() => {
+    if (typeof appointmentsOpenCreate === "function") {
+      appointmentsOpenCreate({
+        patientId: patientId,
+        patientName: `${last}, ${first}`
+      });
+    }
+  }, 200);
+}
+
 function rx_showPatientSearch(){
   rx_panel(`
     <div class="section-title">
