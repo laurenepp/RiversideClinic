@@ -185,6 +185,7 @@ function showLogin() {
 async function doLogin() {
   const usernameInput = document.getElementById("u");
   const passwordInput = document.getElementById("p");
+  const loginBtn = document.querySelector("#loginForm button[type='submit']");
 
   const username = usernameInput ? usernameInput.value.trim() : "";
   const password = passwordInput ? passwordInput.value : "";
@@ -194,16 +195,33 @@ async function doLogin() {
     return;
   }
 
+  if (loginBtn) loginBtn.disabled = true;
+
   try {
-    await api("api/auth/login.php", "POST", { username, password });
+    await api("api/auth/login.php", "POST", {
+      username,
+      password,
+      _ts: Date.now()
+    });
 
-    // Mark this tab/window as authenticated.
     sessionStorage.setItem(TAB_AUTH_KEY, "1");
-
     location.reload();
   } catch (err) {
-    alert("Invalid username or password");
     console.error("Login error:", err);
+
+    let message = "Invalid login";
+
+    if (typeof err === "string" && err.trim()) {
+      message = err;
+    } else if (err && typeof err.error === "string" && err.error.trim()) {
+      message = err.error;
+    } else if (err instanceof Error && err.message && err.message.trim()) {
+      message = err.message;
+    }
+
+    alert(message);
+  } finally {
+    if (loginBtn) loginBtn.disabled = false;
   }
 }
 
