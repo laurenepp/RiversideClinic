@@ -54,6 +54,8 @@ CREATE TABLE `User_Login_Info` (
   `Password_Hash` VARCHAR(255) NOT NULL,
   `Must_Change_Password` TINYINT(1) NOT NULL DEFAULT 1,
   `Password_Changed_At` DATETIME NULL,
+  `Failed_Attempts` INT NOT NULL DEFAULT 0,
+  `Locked_Until` DATETIME NULL,
   `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`User_ID`),
   UNIQUE KEY `uk_User_Login_Info_Username` (`Username`),
