@@ -7,6 +7,13 @@ function escapeHtml(text) {
     .replace(/'/g, "&#39;");
 }
 
+function doctorFormatStatusLabel(status) {
+  return String(status || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function loadDoctor() {
   const content = document.getElementById("content");
   const today = new Date().toISOString().slice(0, 10);
@@ -152,7 +159,7 @@ async function doc_openPatient(patientId) {
     const rows = appts.map(a => `
       <tr>
         <td>${fmtDT(a.Scheduled_Start)}</td>
-        <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
+        <td><span class="${badgeClass(a.Status)}">${doctorFormatStatusLabel(a.Status)}</span></td>
         <td>
           <button class="small admin-create-submit" onclick="doc_open(${a.Appointment_ID}, 'historyPatient', ${patientId}, true)">
   Review
@@ -491,7 +498,7 @@ async function doc_loadSchedule() {
       <td>${a.Appointment_ID}</td>
       <td>${fmtDT(a.Scheduled_Start)}</td>
       <td>${fmtDT(a.Scheduled_End)}</td>
-      <td><span class="${badgeClass(a.Status)}">${a.Status}</span></td>
+      <td><span class="${badgeClass(a.Status)}">${doctorFormatStatusLabel(a.Status)}</span></td>
       <td>${escapeHtml(a.Patient_Last)}, ${escapeHtml(a.Patient_First)}</td>
       <td><button class="small admin-create-submit" onclick="doc_open(${a.Appointment_ID}, 'appointments')">Open</button></td>
     </tr>

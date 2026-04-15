@@ -18,6 +18,13 @@ function loadReceptionist() {
   rx_loadTilesAndNext();
 }
 
+function receptionistFormatStatusLabel(status) {
+  return String(status || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function rx_panel(html){
   const el = document.getElementById("rx_panel");
   if (el) el.innerHTML = html;
@@ -100,7 +107,7 @@ async function rx_loadTilesAndNext(){
     <td>${escapeHtml(a.Patient_Last || "")}, ${escapeHtml(a.Patient_First || "")}</td>
     <td>${escapeHtml(a.Date_Of_Birth || "")}</td>
     <td>Dr. ${escapeHtml(a.Provider_Last || "")}</td>
-    <td><span class="${badgeClass(a.Status)}">${escapeHtml(a.Status || "")}</span></td>
+    <td><span class="${badgeClass(a.Status)}">${escapeHtml(receptionistFormatStatusLabel(a.Status || ""))}</span></td>
     <td><button class="small gold" onclick="rx_openCheckIn(${Number(a.Appointment_ID)})">Check In</button></td>
   </tr>
 `).join("");
@@ -131,7 +138,7 @@ async function rx_loadTilesAndNext(){
     <td>${escapeHtml(fmtDT(a.Scheduled_Start) || "")}</td>
     <td>${escapeHtml(a.Patient_Last || "")}, ${escapeHtml(a.Patient_First || "")}</td>
     <td>Dr. ${escapeHtml(a.Provider_Last || "")}</td>
-    <td><span class="${badgeClass(a.Status)}">${escapeHtml(a.Status || "")}</span></td>
+    <td><span class="${badgeClass(a.Status)}">${escapeHtml(receptionistFormatStatusLabel(a.Status || ""))}</span></td>
     <td><button class="small admin-create-submit" onclick="rx_billAndReschedule(${Number(a.Appointment_ID)})">Bill / Reschedule</button></td>
   </tr>
 `).join("");

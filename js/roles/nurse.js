@@ -15,6 +15,13 @@ function nurse_home() {
   nurse_loadTilesAndQueue();
 }
 
+function nurseFormatStatusLabel(status) {
+  return String(status || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function nurse_tile(label, value, sub, iconText, tone) {
   return `
     <div class="tile ${tone}">
@@ -109,7 +116,7 @@ async function nurse_intake(appointmentId = null) {
 
             <div class="field">
               <label>Status</label>
-              <input type="text" value="${escapeHtml(appt.Status || "")}" disabled>
+              <input type="text" value="${escapeHtml(nurseFormatStatusLabel(appt.Status || ""))}" disabled>
             </div>
           </div>
         </div>

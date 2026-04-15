@@ -213,6 +213,13 @@ function appointmentsTone(status) {
     return "green";
 }
 
+function appointmentsFormatStatusLabel(status) {
+  return String(status || "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function renderAppointmentsDayGrid() {
     const scheduler = document.getElementById("appointments_scheduler");
     if (!scheduler) return;
@@ -253,12 +260,12 @@ function renderAppointmentsDayGrid() {
             const tone = appointmentsTone(appt.Status);
 
             html += `
-                <div class="appt-card ${tone}" onclick="appointmentsView(${appt.Appointment_ID})" style="cursor:pointer;">
-                <div class="appt-patient">${patientName}</div>
-                <div class="appt-type">${appt.Status}</div>
-                <div class="appt-duration">${duration} min</div>
-                </div>
-            `;
+              <div class="appt-card ${tone}" onclick="appointmentsView(${appt.Appointment_ID})">
+              <div class="appt-patient">${patientName}</div>
+              <div class="appt-type">${appointmentsFormatStatusLabel(appt.Status)}</div>
+              <div class="appt-duration">${duration} min</div>
+              </div>
+              `;
             }
 
             html += `</div>`;
@@ -327,7 +334,7 @@ function appointmentsView(appointmentId) {
               <label>Status</label>
               <select id="appt_edit_status">
                 <option value="SCHEDULED" ${appt.Status === "SCHEDULED" ? "selected" : ""}>SCHEDULED</option>
-                <option value="CHECKED_IN" ${appt.Status === "CHECKED_IN" ? "selected" : ""}>CHECKED_IN</option>
+                <option value="CHECKED_IN" ${appt.Status === "CHECKED IN" ? "selected" : ""}>CHECKED IN</option>
                 <option value="COMPLETED" ${appt.Status === "COMPLETED" ? "selected" : ""}>COMPLETED</option>
                 <option value="RESCHEDULED" ${appt.Status === "RESCHEDULED" ? "selected" : ""}>RESCHEDULED</option>
                 <option value="CANCELLED" ${appt.Status === "CANCELLED" ? "selected" : ""}>CANCELLED</option>
@@ -817,12 +824,14 @@ function renderAppointmentsForDay(dayObj, appointments) {
     const end = appointmentsFormatTimeLabel(appt.Scheduled_End);
 
     return `
-      <div class="appt-week-card ${tone}" onclick="appointmentsView(${appt.Appointment_ID})">
-        <div class="appt-patient">${patientName}</div>
-        <div class="appt-type">${start} - ${end}</div>
-        ${appointmentsState.providerScope === "all" ? `<div class="appt-duration">Dr. ${providerName}</div>` : ""}
-        <div class="appt-duration">${appt.Status}</div>
-      </div>
-    `;
+  <div class="appt-week-card ${tone}" onclick="appointmentsView(${appt.Appointment_ID})">
+    <div class="appt-patient">${patientName}</div>
+    <div class="appt-duration">${start} - ${end}</div>
+    ${appointmentsState.providerScope === "all" ? `
+      <div class="appt-type">Dr. ${providerName}</div>
+    ` : ""}
+    <div class="appt-type">${appointmentsFormatStatusLabel(appt.Status)}</div>
+  </div>
+`;
   }).join("");
 }
