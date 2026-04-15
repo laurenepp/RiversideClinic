@@ -54,10 +54,9 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-
+    error_log('clinic_hours_save error: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
-        "error" => "Failed to save clinic hours",
-        "details" => $e->getMessage()
+        "error" => "Failed to save clinic hours"
     ]);
 }

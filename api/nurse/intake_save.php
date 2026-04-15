@@ -217,10 +217,9 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-
+    error_log('intake_save error: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
-        "error" => "Failed to save intake",
-        "details" => $e->getMessage()
+        "error" => "Failed to save intake"
     ]);
 }
