@@ -8,7 +8,7 @@ $charset = "utf8mb4";
 $dsn = "mysql:host=$host;port=3306;dbname=$db;charset=$charset";
 
 // F-09 session timeout settings
-define('SESSION_IDLE_TIMEOUT', 120);     // 2 minutes
+define('SESSION_IDLE_TIMEOUT', 300);     // 5 minutes
 define('SESSION_MAX_LIFETIME', 14400);   // 4 hours
 
 try {
