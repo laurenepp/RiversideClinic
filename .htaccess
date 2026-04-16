@@ -1,0 +1,18 @@
+# Localhost only
+Order Deny,Allow
+Deny from all
+Allow from 127.0.0.1
+Allow from ::1
+
+# No directory browsing
+Options -Indexes
+
+# Security headers that will not break your current UI
+Header always set X-Frame-Options "DENY"
+Header always set X-Content-Type-Options "nosniff"
+Header unset X-Powered-By
+
+# Block direct access to SQL files
+<FilesMatch "\.sql$">
+    Require all denied
+</FilesMatch>
