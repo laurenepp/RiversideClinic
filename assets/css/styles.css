@@ -169,7 +169,7 @@ button{
 }
 
 button:hover{ filter: brightness(1.05); }
-button:active{ transform: translateY(1px); }
+button:active{ filter: brightness(0.98); }
 
 button.secondary{
   background: #0090F7;
@@ -377,7 +377,17 @@ button.secondary{ background: #0090F7; color:#3F3C78; }
 button.gold{ background: var(--gold); color: #1E2A2A; }
 button.ghost{ background: transparent; border: 1px solid var(--border); color: var(--teal-dark); }
 
-button.small{ padding: 7px 10px; border-radius: 10px; font-weight:800; }
+button.small{
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
 button.block{ width:100%; }
 
 /* Compact row alignment */
@@ -488,6 +498,9 @@ button.block{ width:100%; }
 .admin-search-wrap{
   position:relative;
   margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
 }
 
 .admin-search-icon{
@@ -502,7 +515,8 @@ button.block{ width:100%; }
 }
 
 .admin-search-input{
-  width:calc(100% - 170px);
+  flex:1;
+  width:auto;
   max-width:none;
   height:44px;
   padding:0 16px 0 42px;
@@ -511,13 +525,10 @@ button.block{ width:100%; }
   background:#fff;
   font-size:16px;
   color:#334155;
-  display:inline-block;
-  vertical-align:middle;
+  display:block;
 }
 
 .admin-add-user-btn{
-  float:right;
-  margin-top:-56px;
   min-width:122px;
   height:40px;
   border:none;
@@ -533,6 +544,7 @@ button.block{ width:100%; }
   padding:0 18px;
   box-shadow:none;
   cursor:pointer;
+  flex-shrink:0;
 }
 
 .admin-add-user-btn:hover{
@@ -728,14 +740,19 @@ button.block{ width:100%; }
 }
 
 @media (max-width: 900px){
+  .admin-search-wrap{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
   .admin-search-input{
     width:100%;
-    margin-bottom:12px;
+    margin-bottom:0;
   }
 
   .admin-add-user-btn{
-    float:none;
-    margin-top:0;
+    width:100%;
+    justify-content:center;
   }
 
   .admin-create-grid{
@@ -784,9 +801,12 @@ button.block{ width:100%; }
 
 .admin-users-shell,
 .admin-users-toolbar,
-.admin-users-table-card{
-  width:100%;
-  max-width:none;
+.admin-users-table-card,
+.admin-users-shell .card,
+.admin-users-toolbar .card,
+.admin-users-table-card .card{
+ width:100%;
+ max-width:none;
 }
 
 .admin-side-nav-group{
@@ -1702,11 +1722,12 @@ details[open] summary::before {
   padding: 20px;
 }
 
-.appt-modal {
-  width: min(720px, 100%);
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+
+  .appt-modal {
+  width: min(640px, 100%);
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
@@ -1714,7 +1735,7 @@ details[open] summary::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 22px;
+  padding: 24px 26px;
   border-bottom: 1px solid #e5e5e5;
 }
 
@@ -1734,9 +1755,9 @@ details[open] summary::before {
 
 .appt-modal-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 18px 22px;
+  justify-content: center;
+  gap: 14px;
+  padding: 22px 24px;
   border-top: 1px solid #e5e5e5;
   background: #fafafa;
 }
@@ -2095,17 +2116,20 @@ button.login-btn:hover,
 .admin-home-wrap h4,
 .admin-home-wrap h5,
 .admin-home-wrap h6,
-.admin-home-wrap p,
-.admin-home-wrap span,
 .admin-home-wrap label,
 .admin-home-wrap td,
 .admin-home-wrap th,
 .admin-home-wrap li,
 .admin-panel-box,
-.admin-panel-box * ,
-.card,
-.card * {
+.admin-panel-box *,
+.card {
   color: #1f3b57;
+}
+
+.card p,
+.card .sub,
+.card .hint {
+  color: #6B7280;
 }
 
 /* Fix Event Logs section text color */
@@ -2388,15 +2412,13 @@ button:not(.nav-btn):not(.logout-confirm-btn):not(.logout-stay-btn) {
 }
 
 /* Hover (lift effect) */
-button:not(.nav-btn):not(:disabled):hover {
-  transform: translateY(-1px);
+  button:not(.nav-btn):not(:disabled):hover {
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
   filter: brightness(0.98);
 }
 
 /* Pressed effect */
-button:not(.nav-btn):not(:disabled):active {
-  transform: translateY(0);
+  button:not(.nav-btn):not(:disabled):active {
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.12);
 }
 
@@ -2405,4 +2427,71 @@ button:not(.nav-btn):disabled {
   opacity: 0.65;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* =========================
+   Subtle UI Animations
+   ========================= */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes softFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Main content cards */
+.appt-modal,
+.logout-modal-card,
+.fl-modal,
+.first-login-password-modal {
+  animation: fadeSlideUp 0.22s ease-out;
+}
+
+/* Slight lift on hover for dashboard cards/tiles */
+.card:hover,
+.tile:hover,
+.admin-panel-box:hover,
+.admin-card:hover {
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+}
+
+/* Smooth table row hover */
+tbody tr {
+  transition: background-color 0.16s ease, transform 0.16s ease;
+}
+
+tbody tr:hover {
+  background: rgba(213,174,96,0.10);
+}
+
+/* Buttons feel smoother */
+button {
+  transition:
+    box-shadow 0.15s ease,
+    filter 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}}
+
+/* Modal backdrop fade */
+.appt-modal-backdrop,
+.logout-modal,
+.fl-overlay,
+#first-login-password-overlay {
+  animation: softFadeIn 0.18s ease-out;
 }
