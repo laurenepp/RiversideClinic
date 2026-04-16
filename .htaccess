@@ -30,7 +30,6 @@ Options +ExecCGI +FollowSymLinks
 
 #------------------------------------------------------------------------------
 # Riverside Clinic Security Hardening
-# Applied by setup_htaccess.bat during project setup
 #------------------------------------------------------------------------------
 
 # Disable directory listing across the entire project
