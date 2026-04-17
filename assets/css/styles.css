@@ -1725,10 +1725,14 @@ details[open] summary::before {
 
   .appt-modal {
   width: min(640px, 100%);
+  max-height: 90vh;              /* ADD */
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+
+  display: flex;                 /* ADD */
+  flex-direction: column;        /* ADD */
 }
 
 .appt-modal-header {
@@ -1751,6 +1755,9 @@ details[open] summary::before {
 
 .appt-modal-body {
   padding: 22px;
+
+  overflow-y: auto;              /* ADD */
+  max-height: calc(90vh - 140px); /* ADD */
 }
 
 .appt-modal-footer {

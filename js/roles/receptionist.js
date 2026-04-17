@@ -423,56 +423,115 @@ function rx_showPatientCreate() {
     "Register Patient",
     "Create a new patient record.",
     `
-    <div class="form-grid">
-      <div class="field">
-        <label>First Name</label>
-        <input id="p_first" placeholder="First Name">
+      <div class="card-header">
+        <h3>Patient Demographics</h3>
       </div>
 
-      <div class="field">
-        <label>Last Name</label>
-        <input id="p_last" placeholder="Last Name">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p_first">First Name</label>
+          <input id="p_first" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="p_last">Last Name</label>
+          <input id="p_last" type="text" class="input" />
+        </div>
       </div>
 
-      <div class="field">
-        <label>Phone</label>
-        <input id="p_phone" placeholder="Phone">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p_phone">Phone</label>
+          <input id="p_phone" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="p_email">Email</label>
+          <input id="p_email" type="text" class="input" />
+        </div>
       </div>
 
-      <div class="field">
-        <label>Email</label>
-        <input id="p_email" placeholder="Email (optional)">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p_dob">Date of Birth</label>
+          <input id="p_dob" type="date" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="p_address1">Address Line 1</label>
+          <input id="p_address1" type="text" class="input" />
+        </div>
       </div>
 
-      <div class="field">
-        <label>Date of Birth</label>
-        <input id="p_dob" type="date">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p_address2">Address Line 2</label>
+          <input id="p_address2" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="p_city">City</label>
+          <input id="p_city" type="text" class="input" />
+        </div>
       </div>
-    </div>
 
-    <div style="margin-top:16px;">
-      <strong>Emergency Contact</strong>
-      <div class="form-grid" style="margin-top:10px;">
-        <input id="ec_first" placeholder="First Name">
-        <input id="ec_last" placeholder="Last Name">
-        <input id="ec_phone" placeholder="Phone">
-        <input id="ec_relationship" placeholder="Relationship">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="p_state">State</label>
+          <input id="p_state" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="p_postal">Postal Code</label>
+          <input id="p_postal" type="text" class="input" />
+        </div>
       </div>
-    </div>
 
-    <div style="margin-top:16px;">
-      <strong>Insurance Information</strong>
-      <div class="form-grid" style="margin-top:10px;">
-        <input id="ins_provider" placeholder="Provider">
-        <input id="ins_policy_number" placeholder="Policy Number">
-        <input id="ins_policy_holder" placeholder="Policy Holder">
+      <div class="card-header" style="margin-top:20px;">
+        <h3>Emergency Contact</h3>
       </div>
-    </div>
 
-    <div id="rx_msg" style="margin-top:10px;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ec_first">First Name</label>
+          <input id="ec_first" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="ec_last">Last Name</label>
+          <input id="ec_last" type="text" class="input" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ec_phone">Phone</label>
+          <input id="ec_phone" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="ec_relationship">Relationship</label>
+          <input id="ec_relationship" type="text" class="input" />
+        </div>
+      </div>
+
+      <div class="card-header" style="margin-top:20px;">
+        <h3>Insurance Information</h3>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ins_provider">Provider</label>
+          <input id="ins_provider" type="text" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="ins_status">Status</label>
+          <input id="ins_status" type="text" class="input" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ins_date_sent">Date Sent</label>
+          <input id="ins_date_sent" type="date" class="input" />
+        </div>
+      </div>
     `,
     `
-      <button class="ghost" onclick="rx_closeModal()">Cancel</button>
+      <button class="small gold" onclick="rx_closeModal()">Cancel</button>
       <button class="admin-create-submit" onclick="rx_createPatient()">Register Patient</button>
     `
   );
@@ -900,36 +959,34 @@ async function rx_createPatient() {
     email: document.getElementById("p_email")?.value.trim() || "",
     dob: document.getElementById("p_dob")?.value || "",
 
+    addressLine1: document.getElementById("p_address1")?.value.trim() || "",
+    addressLine2: document.getElementById("p_address2")?.value.trim() || "",
+    city: document.getElementById("p_city")?.value.trim() || "",
+    state: document.getElementById("p_state")?.value.trim() || "",
+    postalCode: document.getElementById("p_postal")?.value.trim() || "",
+
     emergencyFirstName: document.getElementById("ec_first")?.value.trim() || "",
     emergencyLastName: document.getElementById("ec_last")?.value.trim() || "",
     emergencyPhone: document.getElementById("ec_phone")?.value.trim() || "",
     emergencyRelationship: document.getElementById("ec_relationship")?.value.trim() || "",
 
     insuranceProvider: document.getElementById("ins_provider")?.value.trim() || "",
-    insurancePolicyNumber: document.getElementById("ins_policy_number")?.value.trim() || "",
-    insurancePolicyHolder: document.getElementById("ins_policy_holder")?.value.trim() || ""
+    insuranceStatus: document.getElementById("ins_status")?.value.trim() || "",
+    insuranceDateSent: document.getElementById("ins_date_sent")?.value || ""
   };
 
-  if (!payload.firstName || !payload.lastName || !payload.dob) {
-    toast("Missing Information", "First name, last name, and date of birth are required.", "err");
+  if (!payload.firstName || !payload.lastName || !payload.phone || !payload.dob) {
+    toast("Missing Information", "First name, last name, phone, and date of birth are required.", "err");
     return;
   }
 
-  const msg = document.getElementById("rx_msg");
-  if (msg) msg.innerHTML = "Creating patient...";
-
   try {
-    const result = await api("api/receptionist/patients_create.php", "POST", payload);
+    const res = await api("api/receptionist/patients_create.php", "POST", payload);
 
-    if (msg) {
-      msg.innerHTML = `<div class="ok">Patient created successfully. Patient ID: ${result.patientId}</div>`;
-    }
-
-    toast("Success", "Patient registered successfully.", "ok");
-  } catch (err) {
-    if (msg) {
-      msg.innerHTML = `<div class="err">Failed to register patient.</div>`;
-    }
-    throw err;
+    toast("Success", `Patient registered (ID ${res.patientId})`, "ok");
+    rx_closeModal();
+    loadReceptionist();
+  } catch (e) {
+    toast("Error", e.message || "Unable to register patient.", "err");
   }
 }
