@@ -1,0 +1,113 @@
+RiversideClinic/
+├── api/
+│   ├── admin/
+│   │   ├── clinic_hours_get.php
+│   │   ├── clinic_hours_save.php
+│   │   ├── dashboard_summary.php
+│   │   ├── event_logs.php
+│   │   ├── reports_appointments.php
+│   │   ├── users_create.php
+│   │   ├── users_disable.php
+│   │   ├── users_get.php
+│   │   ├── users_list.php
+│   │   └── users_update.php    
+│   ├── auth/
+│   │   ├── change_password.php
+│   │   ├── login.php
+│   │   ├── logout.php
+│   │   └── me.php
+│   ├── doctor/
+│   │   ├── appointment_get.php
+│   │   ├── appointment_status.php
+│   │   ├── appointments_my.php
+│   │   ├── dashboard_summary.php
+│   │   ├── exam_get.php
+│   │   ├── exam_save.php
+│   │   ├── notes_list.php
+│   │   ├── notes_save.php
+│   │   ├── patient_appointments.php
+│   │   ├── patients_list.php
+│   │   └── visits_get_or_create.php
+│   ├── nurse/
+│   │   ├── appointment_get.php
+│   │   ├── dashboard_summary.php
+│   │   ├── intake_get.php
+│   │   ├── intake_save.php
+│   │   ├── notes_list.php
+│   │   ├── notes_save.php
+│   │   ├── queue_list.php
+│   │   └── visits_get_or_create.php
+│   ├── receptionist/
+│   │   ├── appointments_cancel.php
+│   │   ├── appointments_checkin.php
+│   │   ├── appointments_create.php
+│   │   ├── appointments_list.php
+│   │   ├── appointments_update.php
+│   │   ├── billing_reschedule_save.php
+│   │   ├── dashboard_summary.php
+│   │   ├── patient_checkin_save.php
+│   │   ├── patient_info_get.php
+│   │   ├── patients_checkin_get.php
+│   │   ├── patients_create.php
+│   │   ├── patients_search.php
+│   │   ├── patients_update.php
+│   │   └── providers_list.php
+│   ├── shared/
+│   │   ├── appointments_cancel.php
+│   │   ├── appointments_create.php
+│   │   ├── appointments_get.php
+│   │   ├── appointments_list.php
+│   │   ├── appointments_update.php
+│   │   ├── patients_search.php
+│   │   ├── providers_list.php
+│   │   ├── schedule_delete.php
+│   │   ├── schedules_delete.php
+│   │   ├── schedules_list.php
+│   │   └── schedules_save.php
+│   ├── config.php
+│   └── utils.php
+├── assets/
+│   ├── css/
+│   │   └── styles.css
+│   └── images/
+│       ├── Desert 1 Circle.png
+│       ├── Desert Riverside Text.png
+│       ├── Final Family Desert 1.png
+│       ├── android-chrome-192x192.png
+│       ├── android-chrome-512x512.png
+│       ├── apple-touch-icon.png
+│       ├── favicon-16x16.png
+│       ├── favicon-32x32.png
+│       ├── favicon.ico
+│       ├── favicon_io (1).zip
+│       ├── logo.png
+│       └── site.webmanifest
+├── database/
+│   ├── database - clean backup/
+│   │   ├── v1/
+│   │   │   ├── schema.sql
+│   │   │   └── seed.sql
+│   │   └── v2/
+│   │       ├── schema.sql
+│   │       └── seed.sql
+│   ├── schema.sql
+│   └── seed.sql
+├── includes/
+│   └── db.php
+├── js/
+│   ├── roles/
+│   │   ├── admin.js
+│   │   ├── doctor.js
+│   │   ├── nurse.js
+│   │   └── receptionist.js
+│   ├── api.js
+│   ├── app.js
+│   ├── appointments.js
+│   ├── auth.js
+│   ├── router.js
+│   └── ui.js
+├── .gitignore
+├── .htaccess
+├── file_structure.txt
+├── README.md
+└── index.html 
