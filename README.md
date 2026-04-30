@@ -25,7 +25,7 @@ No PII or PHI is stored in this repository.
 ---
 
 ## Project Team
-Kimberling Enterprises consisted of four coordinated teams:
+Kimberling Enterprises consisted of five coordinated teams:
 
 - **Systems Analysis & Design**  
 - **Database Development**  
